@@ -57,18 +57,14 @@ public class vision extends SubsystemBase{
         return photonPoseEstimator.update(getResult());
     }
 
-    /**@Override
+    @Override
     public void periodic(){
         if (getResult().hasTargets()){
-            Pose2d pose = photonPoseEstimator.update(getResult()).get().estimatedPose.toPose2d();
-<<<<<<< HEAD
-            //var timestamp = photonPoseEstimator.update(getResult()).get().timestampSeconds;
-            //drivetrain.addVisionMeasurement(pose, timestamp);
-=======
-            var timestamp = photonPoseEstimator.update(getResult()).get().timestampSeconds;
+            Optional<EstimatedRobotPose> estimation = getEstimatedGlobalPose(drivetrain.getState().Pose);
+            Pose2d pose = estimation.get().estimatedPose.toPose2d();
+            var timestamp = estimation.get().timestampSeconds;
             System.out.println(timestamp);
             drivetrain.addVisionMeasurement(pose, timestamp);
->>>>>>> be89af28b1876a368985f3b2019e5abf5d5be952
         }
-    }**/
+    }
 }
