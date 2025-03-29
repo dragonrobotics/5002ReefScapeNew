@@ -1,32 +1,33 @@
 package frc.robot.subsystems;
 
-import static edu.wpi.first.wpilibj2.command.Commands.runOnce;
-import static edu.wpi.first.wpilibj2.command.Commands.sequence;
-import static edu.wpi.first.wpilibj2.command.Commands.waitUntil;
+// import static edu.wpi.first.wpilibj2.command.Commands.runOnce;
+// import static edu.wpi.first.wpilibj2.command.Commands.sequence;
+// import static edu.wpi.first.wpilibj2.command.Commands.waitUntil;
 
 import java.util.function.BooleanSupplier;
 
-import com.pathplanner.lib.trajectory.PathPlannerTrajectory;
+// import com.pathplanner.lib.trajectory.PathPlannerTrajectory;
 import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
-import com.revrobotics.spark.config.EncoderConfig;
-import com.revrobotics.spark.config.EncoderConfigAccessor;
+// import com.revrobotics.spark.config.EncoderConfig;
+// import com.revrobotics.spark.config.EncoderConfigAccessor;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 
-import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.controller.ProfiledPIDController;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.wpilibj.DigitalInput;
+// import edu.wpi.first.math.controller.PIDController;
+import frc.math.PIDEController;
+// import edu.wpi.first.math.controller.ProfiledPIDController;
+// import edu.wpi.first.math.trajectory.TrapezoidProfile;
+// import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants;
+// import frc.robot.Constants;
 import frc.robot.RobotContainer;
 import frc.robot.Constants.OperatorConstants;
 
@@ -39,7 +40,7 @@ public class Arm extends SubsystemBase {
     final RelativeEncoder encoder = m_armRotator.getEncoder();
     final AbsoluteEncoder rotatorAbsoluteEncoder = m_armRotator.getAbsoluteEncoder();
 
-    PIDController m_controller = new PIDController(0.12, 0.02, 0);
+    PIDEController m_controller = new PIDEController(0.12, 0.02, 0);
     public double goal = 0.0;
     double factor = 0.0;
 

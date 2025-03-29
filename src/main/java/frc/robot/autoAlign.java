@@ -1,28 +1,29 @@
 package frc.robot;
 
-import java.math.RoundingMode;
+//import java.math.RoundingMode;
 
 import org.photonvision.PhotonCamera;
 import org.photonvision.targeting.PhotonPipelineResult;
 
 import com.ctre.phoenix6.swerve.SwerveRequest;
-import edu.wpi.first.math.controller.PIDController;
+//import edu.wpi.first.math.controller.PIDEController;
+import frc.math.PIDEController;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
-import frc.robot.RobotContainer;
+//import frc.robot.RobotContainer;
 
 public class autoAlign extends Command {
     private final PhotonCamera camera;
     private final CommandSwerveDrivetrain swerveDrive;
     private final SwerveRequest.RobotCentric requester;
 
-    private final PIDController rotationController;
-    private final PIDController xPidController;
-    private final PIDController yPidController;
+    private final PIDEController rotationController;
+    private final PIDEController xPidController;
+    private final PIDEController yPidController;
 
     private final int targetID;
     
@@ -41,9 +42,9 @@ public class autoAlign extends Command {
         requester = new SwerveRequest.RobotCentric();
 
         // PID Controllers with Tolerance
-        rotationController = new PIDController(0.1, 0.01, 0.0);
-        xPidController = new PIDController(0.1, 0.01, 0.0);
-        yPidController = new PIDController(0.1, 0.01, 0.0);
+        rotationController = new PIDEController(0.1, 0.01, 0.0);
+        xPidController = new PIDEController(0.1, 0.01, 0.0);
+        yPidController = new PIDEController(0.1, 0.01, 0.0);
 
         rotationController.setTolerance(1); 
         xPidController.setTolerance(0.02);     
