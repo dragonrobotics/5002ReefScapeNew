@@ -42,7 +42,7 @@ public class Elevator extends SubsystemBase{
 
     final RelativeEncoder encoder = m_elevator.getEncoder();
     
-    PIDController controller = new PIDController(1, 0, 0.05);
+    PIDController controller = new PIDController(0.7, 0.1, 0.05);
 
     ElevatorFeedforward feedforward = new ElevatorFeedforward(0, 0.25, 0.1);
 

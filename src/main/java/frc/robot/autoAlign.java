@@ -41,9 +41,9 @@ public class autoAlign extends Command {
         requester = new SwerveRequest.RobotCentric();
 
         // PID Controllers with Tolerance
-        rotationController = new PIDController(0.1, 0.0, 0.0);
-        xPidController = new PIDController(0.1, 0.0, 0.0);
-        yPidController = new PIDController(0.1, 0.0, 0.0);
+        rotationController = new PIDController(0.1, 0.01, 0.0);
+        xPidController = new PIDController(0.1, 0.01, 0.0);
+        yPidController = new PIDController(0.1, 0.01, 0.0);
 
         rotationController.setTolerance(1); 
         xPidController.setTolerance(0.02);     

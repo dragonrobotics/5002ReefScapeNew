@@ -23,7 +23,7 @@ public class autoRotate extends SubsystemBase{
     public autoRotate(int targetAID, CommandSwerveDrivetrain drivetrain){
         swerveDrive = drivetrain;
         camera = new PhotonCamera("photonvision");
-        rPidController = new PIDController(.5, 0, 0);
+        rPidController = new PIDController(.5, 0.02, 0);
         rPidController.setTolerance(0.1);
         requester = new RobotCentric();
         targetID = targetAID;
