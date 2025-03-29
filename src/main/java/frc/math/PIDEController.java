@@ -18,7 +18,7 @@ import edu.wpi.first.util.sendable.SendableRegistry;
  * Enhancements:
  * - Velocity algorithm for PID;
  * - Derivative on PV only;
- * - Future: derivative smooting.
+ * - Derivative smooting.
  * - Java: made internal variables protected to allow for proper inheritance.
  */
 public class PIDEController implements Sendable, AutoCloseable {
@@ -74,6 +74,10 @@ public class PIDEController implements Sendable, AutoCloseable {
   protected double m_prevOutput = 0.0;
   protected double m_prevMeas = 0.0;
   protected double m_prevPrevMeas = 0.0;
+  protected double m_prevDerivative = 0.0;
+  // Derivative filter: multiplied by the calculated derivative to mix into the previous derivative.
+  // Trying to set a sane default for the derivative filter for this.
+  protected double m_derivativeFilter = 0.6;
 
   /**
    * Allocates a PIDController with the given constants for kp, ki, and kd and a default period of
@@ -432,6 +436,23 @@ public class PIDEController implements Sendable, AutoCloseable {
     return m_errorDerivative;
   }
 
+  public double getDerivativeFilter() {
+    return m_derivativeFilter;
+  }
+  /**
+   * Sets the derivative 1-st order filter.
+   * D(n) = dPV/dt * filter + (1-filter)*D(n-1)
+   * 0 < filter <= 1.0
+   * @param filterFactor
+   * @throws IllegalArtumentException if not 0 < filterFactor <= 1.0.
+   */
+  public void setDerivativeFilter(double filterFactor) {
+    if ((filterFactor <= 0.0) || (filterFactor > 1.0)) {
+      throw new IllegalArgumentException("Derivative filter must be > 0.0 and <= 1.0.");
+    }
+    m_derivativeFilter = filterFactor;
+  }
+
   /**
    * Returns the next output of the PID controller.
    *
@@ -491,9 +512,9 @@ public class PIDEController implements Sendable, AutoCloseable {
     m_errorDerivative = deltaError / m_period;
 
     double secDerivMeas = (measurement -2* m_prevMeas + m_prevPrevMeas)/m_period;
-
+    double filteredDerivative = m_prevDerivative * (1 - m_derivativeFilter) + secDerivMeas * m_derivativeFilter;
     double derivative = MathUtil.clamp(
-      m_kd * secDerivMeas,
+      m_kd * filteredDerivative,
       m_minimumIntegral, m_maximumIntegral);
 
     m_output = m_prevOutput + m_kp * deltaError + integral + derivative;
@@ -506,6 +527,8 @@ public class PIDEController implements Sendable, AutoCloseable {
     m_prevError = 0;
     m_totalError = 0;
     m_errorDerivative = 0;
+    m_prevDerivative = 0;
+    m_output = 0;
     m_haveMeasurement = false;
   }
 
@@ -531,5 +554,7 @@ public class PIDEController implements Sendable, AutoCloseable {
     builder.addDoubleProperty("error derivative", this::getErrorDerivative, null);
     builder.addDoubleProperty("previous error", () -> this.m_prevError, null);
     builder.addDoubleProperty("total error", this::getAccumulatedError, null);
+    builder.addDoubleProperty("derivative fitler", this::getDerivativeFilter, this::setDerivativeFilter);
+    builder.addDoubleProperty("output", () -> m_output, (double out) -> m_output = out);
   }
 }
