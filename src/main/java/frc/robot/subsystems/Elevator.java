@@ -1,13 +1,13 @@
 package frc.robot.subsystems;
 
-import static edu.wpi.first.wpilibj2.command.Commands.runOnce;
-import static edu.wpi.first.wpilibj2.command.Commands.sequence;
-import static edu.wpi.first.wpilibj2.command.Commands.waitUntil;
+// import static edu.wpi.first.wpilibj2.command.Commands.runOnce;
+// import static edu.wpi.first.wpilibj2.command.Commands.sequence;
+// import static edu.wpi.first.wpilibj2.command.Commands.waitUntil;
 
-import java.lang.ModuleLayer.Controller;
+// import java.lang.ModuleLayer.Controller;
 import java.util.function.BooleanSupplier;
 
-import com.revrobotics.AbsoluteEncoder;
+// import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkBase.PersistMode;
@@ -17,16 +17,17 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 //Hello
 import edu.wpi.first.math.controller.ElevatorFeedforward;
-import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.controller.ProfiledPIDController;
-import edu.wpi.first.math.trajectory.ExponentialProfile.State;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.util.sendable.Sendable;
+// import edu.wpi.first.math.controller.PIDController;
+import frc.math.PIDEController;
+// import edu.wpi.first.math.controller.ProfiledPIDController;
+// import edu.wpi.first.wpilibj2.command.ProfiledPIDSubsystem;
+// import edu.wpi.first.math.trajectory.ExponentialProfile.State;
+// import edu.wpi.first.math.trajectory.TrapezoidProfile;
+// import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.ProfiledPIDSubsystem;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants;
+// import frc.robot.Constants;
 import frc.robot.Constants.OperatorConstants;
 
 
@@ -42,7 +43,7 @@ public class Elevator extends SubsystemBase{
 
     final RelativeEncoder encoder = m_elevator.getEncoder();
     
-    PIDController controller = new PIDController(1, 0, 0.05);
+    PIDEController controller = new PIDEController(0.7, 0.1, 0.05);
 
     ElevatorFeedforward feedforward = new ElevatorFeedforward(0, 0.25, 0.1);
 
