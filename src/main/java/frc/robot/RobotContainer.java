@@ -18,21 +18,25 @@ import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.trajectory.PathPlannerTrajectory;
 
-import edu.wpi.first.epilogue.Epilogue;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.PowerDistribution;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
@@ -45,6 +49,7 @@ import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.autoRotate;
 import frc.robot.subsystems.vision;
+import frc.robot.subsystems.Paths;
 
 import static edu.wpi.first.wpilibj2.command.Commands.either;
 import static edu.wpi.first.wpilibj2.command.Commands.none;
@@ -57,8 +62,9 @@ import static edu.wpi.first.wpilibj2.command.Commands.waitUntil;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.BooleanSupplier;
 import java.util.jar.Attributes.Name;
@@ -95,6 +101,7 @@ public class RobotContainer {
     private final JoystickButton climbButton = new JoystickButton(coJoystick, 8);
 
     public final CommandSwerveDrivetrain drivetrain; 
+    public final Paths path;
     //public final autoAlign align; 
     public final autoRotate align;
     public final static Elevator elevator = new Elevator();
@@ -104,8 +111,14 @@ public class RobotContainer {
     public final vision vision;
     public SendableChooser<Boolean> mode = new SendableChooser<Boolean>();
     private final SendableChooser<Command> autoChooser;
+    public Boolean isRightPose;
+    public List<Pose2d> poseList = new ArrayList<>();
+    public List<Pose2d> intakePoseList = new ArrayList<>();
+    public List<Pose2d> completedPoses = new ArrayList<>();
+    public Command currentCommand;
 
     public RobotContainer() {
+      isRightPose = true;
 
       SmartDashboard.putData("Scheduler", CommandScheduler.getInstance());
       //DataLogManager.start();      
@@ -114,6 +127,8 @@ public class RobotContainer {
       mode.addOption("Calibrate", true);
 
       SmartDashboard.putData("Mode", mode);
+
+      currentCommand = none();
 
       if(mode.getSelected() == null){
         System.out.println("NO MODE");
@@ -139,6 +154,34 @@ public class RobotContainer {
       
       vision = new vision(drivetrain, joystick);
       align = new autoRotate(drivetrain, vision, joystick);
+      path = new Paths(drivetrain);
+      if (DriverStation.getAlliance().isPresent()){
+        DriverStation.Alliance alliance = DriverStation.getAlliance().get();
+
+        if  (alliance == DriverStation.Alliance.Red){
+
+          for (int i = 0; i < Constants.redAutoPoses.length; i ++){
+            poseList.add(Constants.redAutoPoses[i]);
+
+          }
+
+          for (int i = 0; i < Constants.redIntakePoses.length; i ++){
+            intakePoseList.add(Constants.redIntakePoses[i]);          
+          }
+
+        }else if (alliance == DriverStation.Alliance.Blue){
+
+          for (int i = 0; i < Constants.blueAutoPoses.length; i ++){
+            poseList.add(Constants.blueAutoPoses[i]);
+          }
+
+          for (int i = 0; i < Constants.blueIntakePoses.length; i ++){
+            intakePoseList.add(Constants.blueIntakePoses[i]);          
+          }
+
+        }
+      }
+
     }
 
     public void configureBindings() {
@@ -161,18 +204,32 @@ public class RobotContainer {
       //Reset Field Orientation
       joystick.back().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
       
-      //Auto Allign to April Tag
-      joystick.leftBumper().whileTrue(strafe(-0.5));
-      joystick.rightBumper().whileTrue(strafe(0.5));
-      joystick.leftBumper().whileTrue(Align(true));
-      joystick.rightBumper().whileTrue(Align(false));
+      //Auto Allign auwto April Tag
+      joystick.leftBumper().onTrue(runOnce(()->{Command pathCommand = path.pathTo(path.transformOffset(path.closestTag(poseList), 22, -20, 0));;
+                                                currentCommand = pathCommand;
+                                                pathCommand.schedule();}));
+
+      joystick.rightBumper().onTrue(runOnce(()->{Command pathCommand = path.pathTo(path.transformOffset(path.closestTag(poseList), 22, 20, 0));
+                                                currentCommand = pathCommand;
+                                                pathCommand.schedule();}));
+
+      joystick.b().onTrue(runOnce(()->{Command pathCommand = path.pathTo(path.transformOffset(path.closestTag(intakePoseList), 22,0, 180.0));
+                                                currentCommand = pathCommand;
+                                                pathCommand.schedule();}));
+  
+
+      
+                                                
+      joystick.a().onTrue(runOnce(()->{currentCommand.cancel();}));
+  
 
       //Use Shooter
       joystick.rightTrigger().whileTrue(shoot());
-      joystick.leftTrigger().whileTrue(intake());
-
       joystick.y().whileTrue(climb());
       joystick.x().whileTrue(Unclimb());
+  
+
+      
 
       //CALIBRATION MODE BINDS
       if(mode.getSelected() == true){
@@ -180,7 +237,7 @@ public class RobotContainer {
         elevator.setDefaultCommand(elevator.maintanElevator());
         arm.setDefaultCommand(run(()->{arm.runMotor(0);}, arm));
 
-        //Zero Arm and Elevator
+      //Zero Arm and Elevator
         joystick.a().onTrue(calibrateElevator());
         joystick.b().onTrue(calibrateArm());
 
@@ -344,40 +401,18 @@ public class RobotContainer {
     return changeState(4.5, -45);
   }
 
-  public Command strafe(double speed){
-    //return runOnce(()->{System.out.println(speed);});
-    return run(()->{
-      drivetrain.setControl(roboDrive.withVelocityY(speed)
-      );
-    }).finallyDo(() -> 
-       drivetrain.applyRequest(() -> drive
-        .withVelocityX(-joystick.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
-        .withVelocityY(-joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
-        .withRotationalRate(-joystick.getRightX() * MaxAngularRate)));
-      // drivetrain.applyRequest(()->roboDrive
-      //   .withVelocityX(0)
-      //   .withVelocityY(0)
-      //   .withRotationalRate(0.5));});
-    // .finallyDo(() -> 
-    //   drivetrain.applyRequest(() -> drive
-    //     .withVelocityX(-joystick.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
-    //     .withVelocityY(-joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
-    //     .withRotationalRate(-joystick.getRightX() * MaxAngularRate)));
-    }
-
-
-  public Command Align(boolean left){
-    return run(()->{
-      align.moveToState(left);}).
-            until(()->((drivetrain.getState().Pose.getX() >= align.returnGoalPose2d(left).getX() -0.05 && drivetrain.getState().Pose.getX() <= align.returnGoalPose2d(left).getX() + 0.05) &&
-                      (drivetrain.getState().Pose.getY() >= align.returnGoalPose2d(left).getY() - 0.05 && drivetrain.getState().Pose.getY() <= align.returnGoalPose2d(left).getY() + 0.05))).
-            finallyDo(()->{
-              drive
-              .withVelocityX(-joystick.getLeftY() * MaxSpeed)
-              .withVelocityY(-joystick.getLeftX() * MaxSpeed)
-              .withRotationalRate(-joystick.getRightX() * MaxAngularRate);
-            });
-  }
+  // public Command Align(boolean left){
+  //   return run(()->{
+  //     align.moveToState(left);}).
+  //           until(()->((drivetrain.getState().Pose.getX() >= align.returnGoalPose2d(left).getX() -0.05 && drivetrain.getState().Pose.getX() <= align.returnGoalPose2d(left).getX() + 0.05) &&
+  //                     (drivetrain.getState().Pose.getY() >= align.returnGoalPose2d(left).getY() - 0.05 && drivetrain.getState().Pose.getY() <= align.returnGoalPose2d(left).getY() + 0.05))).
+  //           finallyDo(()->{
+  //             drive
+  //             .withVelocityX(-joystick.getLeftY() * MaxSpeed)
+  //             .withVelocityY(-joystick.getLeftX() * MaxSpeed)
+  //             .withRotationalRate(-joystick.getRightX() * MaxAngularRate);
+  //           });
+  // }
 
 
 

@@ -2,18 +2,21 @@ package frc.robot.subsystems;
 
 import java.util.Optional;
 
+//import org.littletonrobotics.junction.Logger;
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
+
+import com.ctre.phoenix6.swerve.jni.SwerveJNI.DriveState;
+
 import org.photonvision.PhotonUtils;
 import org.photonvision.estimation.TargetModel;
 import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.SimCameraProperties;
 import org.photonvision.simulation.VisionSystemSim;
-
 import edu.wpi.first.apriltag.AprilTag;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
@@ -38,7 +41,7 @@ public class vision extends SubsystemBase{
         private final VisionSystemSim visionSim;
         private final CommandSwerveDrivetrain drivetrain;
         private final SimCameraProperties cameraProp;
-       private final PhotonCameraSim cameraSim;
+        private final PhotonCameraSim cameraSim;
         private final CommandXboxController controller;
         private final TargetModel targetModel;
     
@@ -97,29 +100,35 @@ public class vision extends SubsystemBase{
             }
         }
     
-        @Override
-        public void periodic(){
+    @Override
+    public void periodic() {
+        PhotonPipelineResult result = getResult();
+        if (result != null && result.hasTargets()) {
+            photonPoseEstimator.setReferencePose(drivetrain.getState().Pose);
+            Optional<EstimatedRobotPose> estimation = photonPoseEstimator.update(result);
 
-            SmartDashboard.putNumber("Joystick X", controller.getLeftX());
-            SmartDashboard.putNumber("Joystick Y", controller.getLeftY());
-            PhotonPipelineResult result = getResult();
-            if (result != null && result.hasTargets()){
-                
-                Optional<EstimatedRobotPose> estimation = getEstimatedGlobalPose(prevPose2d);
-            
-                if (estimation.isPresent()){
-                    Pose2d pose = estimation.get().estimatedPose.toPose2d();
-                    prevPose2d = pose;
-                System.out.println(pose);
-                var timestamp = result.getTimestampSeconds();
-                System.out.println(timestamp);
-                drivetrain.addVisionMeasurement(pose, timestamp);
-                visionSim.update(pose);
-            }
+        if (estimation.isPresent()) {
+            Pose2d pose = estimation.get().estimatedPose.toPose2d();
+            double timestamp = result.getTimestampSeconds();
 
+            drivetrain.addVisionMeasurement(pose, timestamp);
+
+            // Logger.recordOutput("Vision/EstimatedPose", pose);
+            // Logger.recordOutput("Vision/HasTargets", result.hasTargets());
+            // Logger.recordOutput("Vision/TagCount", result.getTargets().size());
+            // Logger.recordOutput("Vision/Timestamp", timestamp);
         }
-       
 
-        
     }
+
+    SmartDashboard.putNumber("Joystick X", controller.getLeftX());
+    SmartDashboard.putNumber("Joystick Y", controller.getLeftY());
+    
+}
+
+@Override
+public void simulationPeriodic() {
+    
+    visionSim.update(drivetrain.getState().Pose);
+}
 }

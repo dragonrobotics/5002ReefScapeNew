@@ -80,6 +80,9 @@ public final class Constants
   public static final Pose2d[] blueAutoPoses;
   public static final Pose2d[] redAutoPoses;
 
+  public static final Pose2d[] blueIntakePoses;
+  public static final Pose2d[] redIntakePoses;
+  
 
 
   static {
@@ -87,6 +90,9 @@ public final class Constants
 
     blueAutoPoses = new Pose2d[6];
     redAutoPoses = new Pose2d[6];
+
+    blueIntakePoses = new Pose2d[2];
+    redIntakePoses = new Pose2d[2];
 
     blueAutoPoses[0] = (OperatorConstants.layout.getTagPose(21).get().toPose2d());
     blueAutoPoses[1] = (OperatorConstants.layout.getTagPose(22).get().toPose2d());
@@ -101,6 +107,12 @@ public final class Constants
     redAutoPoses[3] = (OperatorConstants.layout.getTagPose(7).get().toPose2d());
     redAutoPoses[4] = (OperatorConstants.layout.getTagPose(6).get().toPose2d());
     redAutoPoses[5] = (OperatorConstants.layout.getTagPose(11).get().toPose2d());
+
+    blueIntakePoses[0] = (OperatorConstants.layout.getTagPose(12).get().toPose2d());
+    blueIntakePoses[1] = (OperatorConstants.layout.getTagPose(13).get().toPose2d());
+
+    redIntakePoses[0]= (OperatorConstants.layout.getTagPose(1).get().toPose2d());
+    redIntakePoses[1]= (OperatorConstants.layout.getTagPose(2).get().toPose2d());
 
     autoAlignSide.put("Blue", blueAutoPoses);
     autoAlignSide.put("Red", redAutoPoses);
