@@ -22,6 +22,8 @@ import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -119,6 +121,10 @@ public class RobotContainer {
 
     public RobotContainer() {
       isRightPose = true;
+      // NetworkTable table = NetworkTableInstance.getDefault().getTable("VirtualButtonBoard");
+      // boolean intakeval = table.getEntry("intake").getBoolean(false);
+
+      // SmartDashboard.putBoolean("VALUE", intakeval);
 
       SmartDashboard.putData("Scheduler", CommandScheduler.getInstance());
       //DataLogManager.start();      
@@ -205,11 +211,11 @@ public class RobotContainer {
       joystick.back().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
       
       //Auto Allign auwto April Tag
-      joystick.leftBumper().onTrue(runOnce(()->{Command pathCommand = path.pathTo(path.transformOffset(path.closestTag(poseList), 22, -20, 0));;
+      joystick.leftBumper().onTrue(runOnce(()->{Command pathCommand = path.pathTo(path.transformOffset(path.closestTagS(poseList, "left"), 22, -20, 0));;
                                                 currentCommand = pathCommand;
                                                 pathCommand.schedule();}));
 
-      joystick.rightBumper().onTrue(runOnce(()->{Command pathCommand = path.pathTo(path.transformOffset(path.closestTag(poseList), 22, 20, 0));
+      joystick.rightBumper().onTrue(runOnce(()->{Command pathCommand = path.pathTo(path.transformOffset(path.closestTagS(poseList, "right"), 22, 20, 0));
                                                 currentCommand = pathCommand;
                                                 pathCommand.schedule();}));
 
