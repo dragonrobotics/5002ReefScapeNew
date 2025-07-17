@@ -127,7 +127,7 @@ public Pose2d closestTag(List<Pose2d> poseList){
             listBool = righties;
         }
 
-        Pose2d shortestPose = new Pose2d();
+        Pose2d shortestPose = poseList.get(0);
         double distance = 1000000000;
         for (int i = 0; i < poseList.size(); i ++){
             boolean hasIt = false;
