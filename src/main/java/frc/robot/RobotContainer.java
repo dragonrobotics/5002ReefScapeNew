@@ -90,7 +90,7 @@ public class RobotContainer {
 
     private final Telemetry logger = new Telemetry(MaxSpeed);
 
-    public CommandXboxController joystick = new CommandXboxController(0);
+    public static CommandXboxController joystick = new CommandXboxController(0);
     private final Joystick coJoystick = new Joystick(1);
 
     private final JoystickButton l2Button = new JoystickButton(coJoystick, 1);
@@ -234,7 +234,13 @@ public class RobotContainer {
       joystick.y().whileTrue(climb());
       joystick.x().whileTrue(Unclimb());
   
+      //Move Elevator
+      joystick.povUp().whileTrue(elevatorUp());
+      joystick.povDown().whileTrue(elevatorDown());
 
+      //Move Arm
+      joystick.povLeft().whileTrue(armCounterClockwise());
+      joystick.povRight().whileTrue(armClockwise());
       
 
       //CALIBRATION MODE BINDS

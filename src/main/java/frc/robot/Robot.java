@@ -25,86 +25,88 @@ import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.vision;
 @Logged
 public class Robot extends TimedRobot {
-  private Command m_autonomousCommand;
-  NetworkTable table;
+private Command m_autonomousCommand;
+NetworkTable table;
+
+
+private final RobotContainer m_robotContainer;
+private final boolean kUseLimelight = false;
+SendableChooser<Boolean> toggleChooser = new SendableChooser<>();
+public Robot() {
+  Epilogue.bind(this);
+  m_robotContainer = new RobotContainer();
 
   
-  private final RobotContainer m_robotContainer;
-  private final boolean kUseLimelight = false;
-  SendableChooser<Boolean> toggleChooser = new SendableChooser<>();
-  public Robot() {
-    Epilogue.bind(this);
-    m_robotContainer = new RobotContainer();
+}
+
+@Override
+public void robotInit(){
+  PortForwarder.add(5800,"photonvision", 5800);
+  table = NetworkTableInstance.getDefault().getTable("VirtualButtonBoard");
+}
+
+@Override
+public void robotPeriodic() {
+  boolean intakeval = table.getEntry("button1").getBoolean(false);
+
+    SmartDashboard.putBoolean("VALUE", intakeval);
+  CommandScheduler.getInstance().run(); 
+}
+
+@Override
+public void disabledInit() {}
+
+@Override
+public void disabledPeriodic() {}
+
+@Override
+public void disabledExit() {}
+
+@Override
+public void autonomousInit() {
+  m_autonomousCommand = m_robotContainer.getAutonomousCommand();
+  m_robotContainer.configureBindings();
+
+  if (m_autonomousCommand != null) {
+    m_autonomousCommand.schedule();
+  }
+}
+
+@Override
+public void autonomousPeriodic() {
+  
+}
+
+@Override
+public void autonomousExit() {}
+
+@Override
+public void teleopInit() {
+  if (m_autonomousCommand != null) {
+    m_autonomousCommand.cancel();
   }
 
-  @Override
-  public void robotInit(){
-    PortForwarder.add(5800,"photonvision", 5800);
-    table = NetworkTableInstance.getDefault().getTable("VirtualButtonBoard");
-  }
+  m_robotContainer.configureBindings();   
+}
 
-  @Override
-  public void robotPeriodic() {
-    boolean intakeval = table.getEntry("button1").getBoolean(false);
+@Override
+public void teleopPeriodic() {
+}
 
-      SmartDashboard.putBoolean("VALUE", intakeval);
-    CommandScheduler.getInstance().run(); 
-  }
+@Override
+public void teleopExit() {}
 
-  @Override
-  public void disabledInit() {}
+@Override
+public void testInit() {
+  CommandScheduler.getInstance().cancelAll();
+}
 
-  @Override
-  public void disabledPeriodic() {}
+@Override
+public void testPeriodic() {}
 
-  @Override
-  public void disabledExit() {}
+@Override
+public void testExit() {}
 
-  @Override
-  public void autonomousInit() {
-    m_autonomousCommand = m_robotContainer.getAutonomousCommand();
-    m_robotContainer.configureBindings();
-
-    if (m_autonomousCommand != null) {
-      m_autonomousCommand.schedule();
-    }
-  }
-
-  @Override
-  public void autonomousPeriodic() {
-    
-  }
-
-  @Override
-  public void autonomousExit() {}
-
-  @Override
-  public void teleopInit() {
-    if (m_autonomousCommand != null) {
-      m_autonomousCommand.cancel();
-    }
-
-    m_robotContainer.configureBindings();   
-  }
-
-  @Override
-  public void teleopPeriodic() {
-  }
-
-  @Override
-  public void teleopExit() {}
-
-  @Override
-  public void testInit() {
-    CommandScheduler.getInstance().cancelAll();
-  }
-
-  @Override
-  public void testPeriodic() {}
-
-  @Override
-  public void testExit() {}
-
-  @Override
-  public void simulationPeriodic() {}
+@Override
+public void simulationPeriodic() {}
 }

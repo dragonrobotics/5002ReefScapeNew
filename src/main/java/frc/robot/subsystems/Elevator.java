@@ -9,6 +9,7 @@ import java.util.function.BooleanSupplier;
 
 import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.RelativeEncoder;
+import com.revrobotics.sim.SparkMaxSim;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
@@ -21,9 +22,17 @@ import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.ExponentialProfile.State;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.util.sendable.Sendable;
+import edu.wpi.first.wpilibj.simulation.BatterySim;
+import edu.wpi.first.wpilibj.simulation.ElevatorSim;
+import edu.wpi.first.wpilibj.simulation.RoboRioSim;
+import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
+import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
+import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ProfiledPIDSubsystem;
@@ -50,7 +59,41 @@ public class Elevator extends SubsystemBase{
 
     Double factor = 0.0;
     Double goal = 0.0;
+
+    // Simulates the elevator using virtual components equivalent to the real ones.  
+    // All gear ratios, masses, dimensions, etc. are calculated from the revised robot design.
+
+    private final DCMotor m_elevatorGearBox = DCMotor.getNEO(2);
+
+    private final SparkMaxSim m_elevatorMotorSim = new SparkMaxSim(m_elevator, m_elevatorGearBox);
+    private final SparkMaxSim m_followerMotorSim = new SparkMaxSim(m_follower, m_elevatorGearBox);
+
     
+
+    private final ElevatorSim m_elevatorSim =
+        new ElevatorSim(
+            m_elevatorGearBox,
+            1,
+            3.5,
+            Units.inchesToMeters(0.75),
+            Units.inchesToMeters(29.921625),
+            Units.inchesToMeters(65.624198),
+            true,
+            Units.inchesToMeters(29.921625),
+            0,
+            0.0);
+
+    // Mechanism2d code for elevator visualization
+    private final Mechanism2d mech2d = new Mechanism2d(0, 4);
+    private final MechanismRoot2d m_elevatorBase = mech2d.getRoot("elevatorBase", 0, 0);
+
+    private final MechanismLigament2d m_movingElevator = m_elevatorBase.append(
+        new MechanismLigament2d(
+            "Elevator", 
+            m_elevatorSim.getPositionMeters(), 
+            90
+        ));
+
     public Elevator(){
         
         mainConfig
@@ -111,6 +154,10 @@ public class Elevator extends SubsystemBase{
         return encoder.getPosition();
     }
 
+    public double getElevatorDistance(){
+        return m_elevatorSim.getPositionMeters();
+    }
+
     public double getAmps(){
         return m_elevator.getOutputCurrent();
     }
@@ -137,4 +184,29 @@ public class Elevator extends SubsystemBase{
         SmartDashboard.putData("Elevator PID", controller);
     }
 
+    @Override
+    public void simulationPeriodic(){
+        // Simulates the idleMode from the real elevator motor
+        if (Math.abs(m_elevatorMotorSim.getAppliedOutput()) < 0.02) {
+            m_elevatorSim.setInput(0); // Stops the virtual motor
+        } 
+        
+        m_elevatorSim.setInput(m_elevatorMotorSim.getAppliedOutput() * RoboRioSim.getVInVoltage());
+
+        m_elevatorSim.update(0.02);
+
+        m_elevatorMotorSim.iterate(
+            Units.radiansPerSecondToRotationsPerMinute(m_elevatorSim.getCurrentDrawAmps()), 
+            RoboRioSim.getVInVoltage(),
+            0.02
+        );
+
+        RoboRioSim.setVInVoltage(
+            BatterySim.calculateDefaultBatteryLoadedVoltage(
+                m_elevatorSim.getCurrentDrawAmps()
+            )
+        );
+
+        m_movingElevator.setLength(m_elevatorSim.getPositionMeters());
+    }
 }
