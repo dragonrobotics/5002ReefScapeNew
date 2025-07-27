@@ -107,8 +107,8 @@ public class RobotContainer {
     //public final autoAlign align; 
     public final autoRotate align;
     public final static Elevator elevator = new Elevator();
+    public final static Arm arm = new Arm();
     public final static Intake intake = new Intake();
-    public final Arm arm = new Arm();
     public final Climber climber = new Climber();
     public final vision vision;
     public SendableChooser<Boolean> mode = new SendableChooser<Boolean>();
@@ -230,7 +230,9 @@ public class RobotContainer {
   
 
       //Use Shooter
+      joystick.leftTrigger().onTrue(intake());
       joystick.rightTrigger().whileTrue(shoot());
+
       joystick.y().whileTrue(climb());
       joystick.x().whileTrue(Unclimb());
   

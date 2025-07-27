@@ -7,11 +7,7 @@ import static edu.wpi.first.wpilibj2.command.Commands.waitUntil;
 import java.util.function.BooleanSupplier;
 
 import com.pathplanner.lib.trajectory.PathPlannerTrajectory;
-import com.revrobotics.AbsoluteEncoder;
-import com.revrobotics.RelativeEncoder;
-import com.revrobotics.sim.SparkAbsoluteEncoderSim;
 import com.revrobotics.sim.SparkMaxSim;
-import com.revrobotics.sim.SparkRelativeEncoderSim;
 import com.revrobotics.spark.SparkAbsoluteEncoder;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkRelativeEncoder;
@@ -19,8 +15,6 @@ import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
 import dev.doglog.DogLog;
 
-import com.revrobotics.spark.config.EncoderConfig;
-import com.revrobotics.spark.config.EncoderConfigAccessor;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
@@ -36,21 +30,13 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.simulation.BatterySim;
-import edu.wpi.first.wpilibj.simulation.EncoderSim;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
-import edu.wpi.first.wpilibj.simulation.XboxControllerSim;
-import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
-import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
-import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj.util.Color;
-import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import frc.robot.Constants;
 import frc.robot.RobotContainer;
 import frc.robot.Constants.OperatorConstants;
 @Logged
@@ -69,12 +55,11 @@ public class Arm extends SubsystemBase {
 
     public SendableChooser<Boolean> brakeMode = new SendableChooser<Boolean>();
 
-    private Intake intake = RobotContainer.intake;
     private Elevator elevator = RobotContainer.elevator;
     private CommandXboxController localSimJoystick = RobotContainer.joystick;
 
     /*
-     * Simulation code
+     * Simulates the arm for AdvantageScope
      */
 
     private final DCMotor m_armGearBoxSim = DCMotor.getNEO(1);
@@ -85,65 +70,18 @@ public class Arm extends SubsystemBase {
         new SingleJointedArmSim(
             m_armGearBoxSim,
             3, // Represents a 3:1 gear ratio
-            SingleJointedArmSim.estimateMOI(Units.inchesToMeters(12), 3),
-            Units.inchesToMeters(12), // arm length
-            Units.degreesToRadians(-30), // The lowest angle our arm can aim towards.
-            Units.degreesToRadians(90), // Limits the arm to vertical positioning.
+            SingleJointedArmSim.estimateMOI(
+                Units.inchesToMeters(23.092), 
+                Units.lbsToKilograms(2.5917853)
+            ),
+            Units.inchesToMeters(23.092), // arm length
+            Units.degreesToRadians(0), // The lowest angle our arm can aim towards.
+            Units.degreesToRadians(360), // Limits the arm to vertical positioning.
             true,
-            Units.degreesToRadians(-30), // The angle at which the arm starts at during simulation.
+            Units.degreesToRadians(0), // The angle at which the arm starts at during simulation.
             0.0,
             0.0 
         );
-
-    /* 
-     * Mechanism2d code
-     */
-
-     private final Mechanism2d armMech2d = new Mechanism2d(3, 3);
-
-
-    // Positions the arm mechanism relative to robot mesh origin.
-    private final MechanismRoot2d m_armPivot = armMech2d.getRoot(
-        "armPivot", 
-        1.625, // x-coord
-        Units.inchesToMeters(1.876000) // y-coord
-    );
-    
-    // This elevator is driven by data sent from Elevator.java.
-    private final MechanismLigament2d m_elevatorSim = m_armPivot.append(
-        new MechanismLigament2d(
-            "ArmTower", 
-            1, // placeholder
-            90 // makes the elevator stand vertically
-        )
-    );
-
-    // Forwards-facing metal extension before the arm motor
-    private final MechanismLigament2d m_armExtension = m_elevatorSim.append(
-        new MechanismLigament2d(
-            "Arm Extension",
-            Units.inchesToMeters(9.5),
-            -90) // Horizontal metal beam
-    );
-
-    // Rotating part of the arm.
-    private final MechanismLigament2d m_arm = m_armExtension.append(
-        new MechanismLigament2d(
-            "Arm",
-            Units.inchesToMeters(12), // arm length
-            0, // placeholder
-            6,
-            new Color8Bit(Color.kYellow)
-        )
-    );
-
-    // The robot's intake, no simulator functionality for now
-    private final MechanismLigament2d m_intake = m_arm.append(
-        new MechanismLigament2d(
-            "Intake",
-            Units.inchesToMeters(3.902), // 
-            Units.radiansToDegrees(m_armSim.getAngleRads()) + 30)
-    );
 
     public Arm(){
         brakeMode.setDefaultOption("Brake", true);
@@ -163,16 +101,14 @@ public class Arm extends SubsystemBase {
 
         m_controller.setTolerance(2);
         setPosition(0.0);
-
-        m_elevatorSim.setLineWeight(7);
-        m_armExtension.setLineWeight(7);
-        m_intake.setLineWeight(7);
-
-        SmartDashboard.putData("Arm Sim", armMech2d);
     }
 
     public double getMeasurement(){
         return encoder.getPosition();
+    }
+
+    public double getSimAngle() {
+        return m_armSim.getAngleRads();
     }
 
     public void setPosition(double position){
@@ -235,21 +171,16 @@ public class Arm extends SubsystemBase {
 
         // Pose3d logging for visualizing mechanisms in 3d
         DogLog.log("ZeroedComponentPoses", new Pose3d[] {new Pose3d()});
-        DogLog.log(
-            "ArmPose3d", 
-            new Pose3d[] {
-                new Pose3d(
-                    0.3175,
-                    0,
-                    elevator.getElevatorDistance(),
-                    new Rotation3d(
-                        0, 
-                        -m_armSim.getAngleRads() - Units.degreesToRadians(30), 
-                        0))
-            });
-
-        // Live data for arm/elevator:
-        m_arm.setAngle(Units.radiansToDegrees(m_armSim.getAngleRads()));
-        m_elevatorSim.setLength(elevator.getElevatorDistance());
+        DogLog.log("ArmPose3d", new Pose3d[] {
+            new Pose3d(
+            0, 
+            -0.0047752, 
+            elevator.getElevatorDistance() + 0.2381504, 
+            new Rotation3d(
+                0, 
+                -m_armSim.getAngleRads(), 
+                0
+            ))
+        });
     }
 }

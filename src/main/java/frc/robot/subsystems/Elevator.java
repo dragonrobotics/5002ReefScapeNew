@@ -17,27 +17,25 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
+import dev.doglog.DogLog;
 import edu.wpi.first.epilogue.Logged;
 //Hello
 import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.ExponentialProfile.State;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.wpilibj.simulation.BatterySim;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
-import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
-import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
-import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ProfiledPIDSubsystem;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants;
 import frc.robot.Constants.OperatorConstants;
 
 @Logged
@@ -60,39 +58,26 @@ public class Elevator extends SubsystemBase{
     Double factor = 0.0;
     Double goal = 0.0;
 
-    // Simulates the elevator using virtual components equivalent to the real ones.  
-    // All gear ratios, masses, dimensions, etc. are calculated from the revised robot design.
-
+    /*
+     * Simulates the elevator for AdvantageScope
+     */
+    
     private final DCMotor m_elevatorGearBox = DCMotor.getNEO(2);
 
     private final SparkMaxSim m_elevatorMotorSim = new SparkMaxSim(m_elevator, m_elevatorGearBox);
-    private final SparkMaxSim m_followerMotorSim = new SparkMaxSim(m_follower, m_elevatorGearBox);
-
-    
 
     private final ElevatorSim m_elevatorSim =
         new ElevatorSim(
             m_elevatorGearBox,
             1,
-            3.5,
+            Units.lbsToKilograms(15.222378),
             Units.inchesToMeters(0.75),
-            Units.inchesToMeters(29.921625),
-            Units.inchesToMeters(65.624198),
+            Units.inchesToMeters(0),
+            Units.inchesToMeters(58.376),
             true,
-            Units.inchesToMeters(29.921625),
+            Units.inchesToMeters(0),
             0,
             0.0);
-
-    // Mechanism2d code for elevator visualization
-    private final Mechanism2d mech2d = new Mechanism2d(0, 4);
-    private final MechanismRoot2d m_elevatorBase = mech2d.getRoot("elevatorBase", 0, 0);
-
-    private final MechanismLigament2d m_movingElevator = m_elevatorBase.append(
-        new MechanismLigament2d(
-            "Elevator", 
-            m_elevatorSim.getPositionMeters(), 
-            90
-        ));
 
     public Elevator(){
         
@@ -186,11 +171,6 @@ public class Elevator extends SubsystemBase{
 
     @Override
     public void simulationPeriodic(){
-        // Simulates the idleMode from the real elevator motor
-        if (Math.abs(m_elevatorMotorSim.getAppliedOutput()) < 0.02) {
-            m_elevatorSim.setInput(0); // Stops the virtual motor
-        } 
-        
         m_elevatorSim.setInput(m_elevatorMotorSim.getAppliedOutput() * RoboRioSim.getVInVoltage());
 
         m_elevatorSim.update(0.02);
@@ -207,6 +187,31 @@ public class Elevator extends SubsystemBase{
             )
         );
 
-        m_movingElevator.setLength(m_elevatorSim.getPositionMeters());
+        DogLog.log("ZeroedComponentPoses", new Pose3d[] {new Pose3d()});
+
+        DogLog.log("Elevator First Stage Pose 3D", new Pose3d[] {
+            new Pose3d(
+                0, 
+                0.13335, 
+                (getElevatorDistance() * (0.581/1.235)) + 0.1873504 , new Rotation3d(
+                    0, 
+                    0, 
+                    0
+                )
+            )
+        });
+
+        DogLog.log("Elevator Carriage Pose 3D", new Pose3d[] {
+            new Pose3d(
+                0,
+                0.13335, 
+                getElevatorDistance() + 0.1873504, 
+                new Rotation3d(
+                    0, 
+                    0, 
+                    0
+                )
+            )
+        });
     }
 }
