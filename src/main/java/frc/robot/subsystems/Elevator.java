@@ -10,6 +10,7 @@ import java.util.function.BooleanSupplier;
 import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.sim.SparkMaxSim;
+import com.revrobotics.sim.SparkRelativeEncoderSim;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
@@ -50,6 +51,8 @@ public class Elevator extends SubsystemBase{
     SparkMaxConfig followerConfig = new SparkMaxConfig();
 
     final RelativeEncoder encoder = m_elevator.getEncoder();
+
+    final SparkRelativeEncoderSim encoderSim = new SparkRelativeEncoderSim(m_elevator);
     
     PIDController controller = new PIDController(1, 0, 0.05);
 
@@ -69,13 +72,13 @@ public class Elevator extends SubsystemBase{
     private final ElevatorSim m_elevatorSim =
         new ElevatorSim(
             m_elevatorGearBox,
-            1,
+            3,
             Units.lbsToKilograms(15.222378),
             Units.inchesToMeters(0.75),
-            Units.inchesToMeters(0),
-            Units.inchesToMeters(58.376),
+            Units.inchesToMeters(0), // Min. elevator height
+            Units.inchesToMeters(28), // Max. elevator height
             true,
-            Units.inchesToMeters(0),
+            Units.inchesToMeters(0), // Starts the elevator at the bottom
             0,
             0.0);
 
@@ -102,6 +105,7 @@ public class Elevator extends SubsystemBase{
         controller.reset();
 
         controller.setTolerance(0.25);
+
         moveToPosition(1.0);
     }
 
@@ -165,20 +169,28 @@ public class Elevator extends SubsystemBase{
         SmartDashboard.putNumber("Elevator Position", encoder.getPosition());
         SmartDashboard.putNumber("Elevator Amps", getAmps());
         SmartDashboard.putNumber("Elevator Conversion Factor", factor);
-    //    SmartDashboard.putData("Elevator FeedForward", (Sendable) feedforward);
+        SmartDashboard.putNumber("Elevator Goal", goal);
+    //  SmartDashboard.putData("Elevator FeedForward", (Sendable) feedforward);
         SmartDashboard.putData("Elevator PID", controller);
     }
 
-    @Override
     public void simulationPeriodic(){
+        SmartDashboard.putNumber("Elevator Sim Height", Units.metersToInches(getElevatorDistance()));
+
         m_elevatorSim.setInput(m_elevatorMotorSim.getAppliedOutput() * RoboRioSim.getVInVoltage());
 
         m_elevatorSim.update(0.02);
-
+        
         m_elevatorMotorSim.iterate(
-            Units.radiansPerSecondToRotationsPerMinute(m_elevatorSim.getCurrentDrawAmps()), 
+            60 * (m_elevatorSim.getVelocityMetersPerSecond()/(Math.PI * 1.25)),
             RoboRioSim.getVInVoltage(),
             0.02
+        );
+
+        encoder.setPosition(
+            Units.metersToInches(
+                m_elevatorSim.getPositionMeters()
+            )
         );
 
         RoboRioSim.setVInVoltage(
@@ -192,8 +204,9 @@ public class Elevator extends SubsystemBase{
         DogLog.log("Elevator First Stage Pose 3D", new Pose3d[] {
             new Pose3d(
                 0, 
-                0.13335, 
-                (getElevatorDistance() * (0.581/1.235)) + 0.1873504 , new Rotation3d(
+                -0.13335, 
+                getElevatorDistance() + 0.1873504,
+                new Rotation3d(
                     0, 
                     0, 
                     0
@@ -204,8 +217,8 @@ public class Elevator extends SubsystemBase{
         DogLog.log("Elevator Carriage Pose 3D", new Pose3d[] {
             new Pose3d(
                 0,
-                0.13335, 
-                getElevatorDistance() + 0.1873504, 
+                -0.13335, 
+                (getElevatorDistance() * 2) + 0.1873504, 
                 new Rotation3d(
                     0, 
                     0, 

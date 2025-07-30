@@ -74,11 +74,6 @@ public class Climber extends SubsystemBase {
 
     @Override
     public void simulationPeriodic() {
-        // Simulates the idleMode from the real climber motor
-        if (Math.abs(m_climberMotorSim.getAppliedOutput()) < 0.02) {
-            m_climberSim.setInput(0); // Stops the virtual motor
-        } 
-
         m_climberSim.setInput(m_climberMotorSim.getAppliedOutput() * RoboRioSim.getVInVoltage());
 
         m_climberSim.update(0.02);
@@ -104,7 +99,9 @@ public class Climber extends SubsystemBase {
                     new Rotation3d(
                         m_climberSim.getAngleRads(), 
                         0, 
-                        0))
+                        0
+                    )
+                )
             }
         );
     }

@@ -102,17 +102,6 @@ public class Intake extends SubsystemBase {
 
     @Override
     public void simulationPeriodic() {
-
-        m_intakeSim.getCurrentDrawAmps();
-
-        m_shooterMotorSim.iterate(
-            m_intakeSim.getAngularVelocityRPM(), 
-            RoboRioSim.getVInVoltage(), 
-            0.02
-        );
-
-        RoboRioSim.setVInVoltage(BatterySim.calculateDefaultBatteryLoadedVoltage(m_intakeSim.getCurrentDrawAmps()));
-
         DogLog.log("ZeroedComponentPoses", new Pose3d[] {new Pose3d()});
         DogLog.log("Intake Coral Pose", new Pose3d[] {
             new Pose3d(
@@ -122,16 +111,16 @@ public class Intake extends SubsystemBase {
                 new Rotation3d(
                     0, 
                     0, 
-                    Units.degreesToRadians(robotRotation)
+                    Units.degreesToRadians(robotRotation+180)
                 )
             ).transformBy(
                 new Transform3d(
                     0, 
-                    -0.0047752, 
-                    elevator.getElevatorDistance() + 0.2381504, 
+                    0.0047752, 
+                    (elevator.getElevatorDistance() * 2) + 0.2381504, 
                     new Rotation3d(
                         0, 
-                        -arm.getSimAngle(), 
+                        arm.getSimAngle() + Units.degreesToRadians(54.133228-90),
                         0
                     )
                 )
@@ -142,7 +131,7 @@ public class Intake extends SubsystemBase {
                     0.3990, 
                     new Rotation3d(
                         0, 
-                        Units.degreesToRadians(90 - 54.133228), 
+                        Units.degreesToRadians(270 - 54.133228), 
                         0
                     )
                 )

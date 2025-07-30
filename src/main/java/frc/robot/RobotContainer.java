@@ -226,15 +226,18 @@ public class RobotContainer {
 
       
                                                 
-      joystick.a().onTrue(runOnce(()->{currentCommand.cancel();}));
-  
+      joystick.a().onTrue(runOnce(()->{currentCommand.cancel();}));  
+
+      /*
+       * Temporar
+       */
 
       //Use Shooter
       joystick.leftTrigger().onTrue(intake());
       joystick.rightTrigger().whileTrue(shoot());
 
-      joystick.y().whileTrue(climb());
-      joystick.x().whileTrue(Unclimb());
+      joystick.y().onTrue(l3State());
+      joystick.x().onTrue(l2State());
   
       //Move Elevator
       joystick.povUp().whileTrue(elevatorUp());

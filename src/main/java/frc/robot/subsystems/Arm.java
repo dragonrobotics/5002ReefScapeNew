@@ -56,7 +56,6 @@ public class Arm extends SubsystemBase {
     public SendableChooser<Boolean> brakeMode = new SendableChooser<Boolean>();
 
     private Elevator elevator = RobotContainer.elevator;
-    private CommandXboxController localSimJoystick = RobotContainer.joystick;
 
     /*
      * Simulates the arm for AdvantageScope
@@ -75,8 +74,8 @@ public class Arm extends SubsystemBase {
                 Units.lbsToKilograms(2.5917853)
             ),
             Units.inchesToMeters(23.092), // arm length
-            Units.degreesToRadians(0), // The lowest angle our arm can aim towards.
-            Units.degreesToRadians(360), // Limits the arm to vertical positioning.
+            Units.degreesToRadians(-180), // The lowest angle our arm can aim towards.
+            Units.degreesToRadians(180), // Limits the arm to vertical positioning.
             true,
             Units.degreesToRadians(0), // The angle at which the arm starts at during simulation.
             0.0,
@@ -100,6 +99,7 @@ public class Arm extends SubsystemBase {
         m_armRotator.configure(rotatorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
         m_controller.setTolerance(2);
+
         setPosition(0.0);
     }
 
@@ -149,6 +149,7 @@ public class Arm extends SubsystemBase {
         SmartDashboard.putNumber("Arm Position", getMeasurement());
         SmartDashboard.putData("Arm Pid", m_controller);
         SmartDashboard.putNumber("Arm Output", m_controller.calculate(getMeasurement()));
+        SmartDashboard.putNumber("Arm Goal", goal);
         SmartDashboard.putBoolean("Arm At Goal", m_controller.atSetpoint());
         SmartDashboard.putNumber("Abolute Encoder", rotatorAbsoluteEncoder.getPosition());
     }
@@ -167,7 +168,17 @@ public class Arm extends SubsystemBase {
             0.02
         );
 
-        RoboRioSim.setVInVoltage(BatterySim.calculateDefaultBatteryLoadedVoltage(m_armSim.getCurrentDrawAmps()));
+        encoder.setPosition(
+            Units.radiansToDegrees(
+                m_armSim.getAngleRads()
+            )
+        );
+
+        RoboRioSim.setVInVoltage(
+            BatterySim.calculateDefaultBatteryLoadedVoltage(
+                m_armSim.getCurrentDrawAmps()
+            )
+        );
 
         // Pose3d logging for visualizing mechanisms in 3d
         DogLog.log("ZeroedComponentPoses", new Pose3d[] {new Pose3d()});
@@ -175,10 +186,10 @@ public class Arm extends SubsystemBase {
             new Pose3d(
             0, 
             -0.0047752, 
-            elevator.getElevatorDistance() + 0.2381504, 
+            (elevator.getElevatorDistance() * 2) + 0.2381504, 
             new Rotation3d(
                 0, 
-                -m_armSim.getAngleRads(), 
+                -m_armSim.getAngleRads() + Units.degreesToRadians(90 - 54.133228), 
                 0
             ))
         });
