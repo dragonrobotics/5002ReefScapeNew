@@ -211,16 +211,17 @@ public class RobotContainer {
       joystick.back().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
       
       //Auto Allign auwto April Tag
-      joystick.leftBumper().onTrue(runOnce(()->{Command pathCommand = path.pathTo(path.transformOffset(path.closestTagS(poseList, "left"), 30, 0.0, 180.0));;
-                                                currentCommand = pathCommand;
+      joystick.leftBumper().onTrue(runOnce(()->{Command pathCommand = path.pathTo(path.transformOffset(path.closestTagS(poseList, "left"), 40, 0.0, 180.0));;
+
+                                                currentCommand = pathCommand; 
                                                 pathCommand.schedule();}));
 
-      joystick.rightBumper().onTrue(runOnce(()->{Command pathCommand = path.pathTo(path.transformOffset(path.closestTagS(poseList, "right"), 30, 12.5, 180.0));
+      joystick.rightBumper().onTrue(runOnce(()->{Command pathCommand = path.pathTo(vision.fixResult());
                                                 currentCommand = pathCommand;
                                                 pathCommand.schedule();}));
 
       joystick.b().onTrue(runOnce(()->{Command pathCommand = path.pathTo(path.transformOffset(path.closestTag(intakePoseList), 36,10, 180.0));
-                                                currentCommand = pathCommand;
+                                                currentCommand = sequence(pathCommand);
                                                 pathCommand.schedule();}));
   
 

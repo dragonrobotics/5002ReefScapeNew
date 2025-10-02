@@ -35,6 +35,7 @@ import frc.robot.Constants;
 public class vision extends SubsystemBase{
     private Pose2d prevPose2d;
         private final PhotonCamera camera; 
+        private final Paths pather;
         private final AprilTagFieldLayout aprilTagFieldLayout;
         private final Transform3d robotToCam;
         private final PhotonPoseEstimator photonPoseEstimator;
@@ -56,7 +57,7 @@ public class vision extends SubsystemBase{
     
             robotToCam = new Transform3d(new Translation3d(0.3302, 0.1016, 0.3048), new Rotation3d(0,0,0));
             photonPoseEstimator =  new PhotonPoseEstimator(aprilTagFieldLayout, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, robotToCam);
-
+            pather = new Paths(drivetrain);
             visionSim = new VisionSystemSim("main");
             visionSim.addAprilTags(aprilTagFieldLayout);
             targetModel = new TargetModel(0.1651, 0.1651);
@@ -98,6 +99,20 @@ public class vision extends SubsystemBase{
             else{
                 return Optional.empty();
             }
+        }
+
+        public Pose2d fixResult(){ // Buttons stop working after first command
+            PhotonTrackedTarget result = getTracked();
+
+            Transform3d pose = result.getBestCameraToTarget();
+            double x = pose.getX();
+            double y = pose.getY();
+
+            Pose2d pose2D = drivetrain.getState().Pose;
+        
+            Pose2d newPose2D = Paths.transformOffset(pose2D, x/0.0254 - 2, y/0.0254, 0);
+            return newPose2D;
+
         }
     
     @Override
