@@ -50,11 +50,11 @@ public class Elevator extends SubsystemBase{
     SparkMaxConfig mainConfig = new SparkMaxConfig();
     SparkMaxConfig followerConfig = new SparkMaxConfig();
 
-    final RelativeEncoder encoder = m_elevator.getEncoder();
+    final RelativeEncoder encoder = m_follower.getEncoder();
 
     final SparkRelativeEncoderSim encoderSim = new SparkRelativeEncoderSim(m_elevator);
     
-    PIDController controller = new PIDController(1, 0, 0.05);
+    PIDController controller = new PIDController(0.8, 0, 0.05);
 
     ElevatorFeedforward feedforward = new ElevatorFeedforward(0, 0.25, 0.1);
 

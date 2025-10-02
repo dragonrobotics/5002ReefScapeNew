@@ -211,15 +211,15 @@ public class RobotContainer {
       joystick.back().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
       
       //Auto Allign auwto April Tag
-      joystick.leftBumper().onTrue(runOnce(()->{Command pathCommand = path.pathTo(path.transformOffset(path.closestTagS(poseList, "left"), 22, -20, 0));;
+      joystick.leftBumper().onTrue(runOnce(()->{Command pathCommand = path.pathTo(path.transformOffset(path.closestTagS(poseList, "left"), 30, 0.0, 180.0));;
                                                 currentCommand = pathCommand;
                                                 pathCommand.schedule();}));
 
-      joystick.rightBumper().onTrue(runOnce(()->{Command pathCommand = path.pathTo(path.transformOffset(path.closestTagS(poseList, "right"), 22, 20, 0));
+      joystick.rightBumper().onTrue(runOnce(()->{Command pathCommand = path.pathTo(path.transformOffset(path.closestTagS(poseList, "right"), 30, 12.5, 180.0));
                                                 currentCommand = pathCommand;
                                                 pathCommand.schedule();}));
 
-      joystick.b().onTrue(runOnce(()->{Command pathCommand = path.pathTo(path.transformOffset(path.closestTag(intakePoseList), 22,0, 180.0));
+      joystick.b().onTrue(runOnce(()->{Command pathCommand = path.pathTo(path.transformOffset(path.closestTag(intakePoseList), 36,10, 180.0));
                                                 currentCommand = pathCommand;
                                                 pathCommand.schedule();}));
   
@@ -228,25 +228,10 @@ public class RobotContainer {
                                                 
       joystick.a().onTrue(runOnce(()->{currentCommand.cancel();}));  
 
-      /*
-       * Temporar
-       */
-
       //Use Shooter
-      joystick.leftTrigger().onTrue(intake());
       joystick.rightTrigger().whileTrue(shoot());
-
-      joystick.y().onTrue(l3State());
-      joystick.x().onTrue(l2State());
-  
-      //Move Elevator
-      joystick.povUp().whileTrue(elevatorUp());
-      joystick.povDown().whileTrue(elevatorDown());
-
-      //Move Arm
-      joystick.povLeft().whileTrue(armCounterClockwise());
-      joystick.povRight().whileTrue(armClockwise());
-      
+      joystick.y().whileTrue(climb());
+      joystick.x().whileTrue(Unclimb());
 
       //CALIBRATION MODE BINDS
       if(mode.getSelected() == true){
@@ -395,15 +380,15 @@ public class RobotContainer {
   }
 
   public Command l4State(){
-    return changeState(27.95, -41.8);
+    return changeState(27.95, -41.8); // 27.95 inches
   }
 
   public Command l3State(){
-    return changeState(15.25, -36);
+    return changeState(15.25, -36); // 15.25 inches
   }
 
   public Command l2State(){
-    return changeState(7.31, -36);
+    return changeState(7.31, -36); // 7.31 inches
   }
 
   public Command climbState(){

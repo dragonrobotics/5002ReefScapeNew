@@ -49,7 +49,7 @@ public class Arm extends SubsystemBase {
     final SparkRelativeEncoder encoder = (SparkRelativeEncoder) m_armRotator.getEncoder();
     final SparkAbsoluteEncoder rotatorAbsoluteEncoder = m_armRotator.getAbsoluteEncoder();
 
-    ProfiledPIDController m_controller = new ProfiledPIDController(0.1, 0, 0.01, new TrapezoidProfile.Constraints(99, 99));
+    ProfiledPIDController m_controller = new ProfiledPIDController(0.1, 0, 0.00, new TrapezoidProfile.Constraints(99, 99));
     public double goal = 0.0;
     double factor = 0.0;
 
@@ -98,7 +98,7 @@ public class Arm extends SubsystemBase {
     
         m_armRotator.configure(rotatorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
-        m_controller.setTolerance(2);
+        m_controller.setTolerance(4);
 
         setPosition(0.0);
     }

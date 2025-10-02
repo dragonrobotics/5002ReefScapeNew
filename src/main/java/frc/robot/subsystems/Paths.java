@@ -69,8 +69,11 @@ public class Paths extends SubsystemBase {
 
         buttonTable = NetworkTableInstance.getDefault().getTable("VirtualButtonBoard");
         drivetrain = driveTrain;
-        contraints = new PathConstraints(3.0, 4.0,
-                                        Units.degreesToRadians(540), Units.degreesToRadians(720));
+        contraints = new PathConstraints(
+            2.0, // 3 m/s
+            4.0,
+            Units.degreesToRadians(540), 
+            Units.degreesToRadians(720));
     }
 
     public Command pathTo(Pose2d pose){
