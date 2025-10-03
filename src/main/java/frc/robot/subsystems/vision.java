@@ -1,5 +1,6 @@
 package frc.robot.subsystems;
 
+import java.security.DrbgParameters.Reseed;
 import java.util.Optional;
 
 //import org.littletonrobotics.junction.Logger;
@@ -123,21 +124,21 @@ public class vision extends SubsystemBase{
                     }
                 }
         
-                public void fixResult(){ // Buttons stop working after first command
-                    cachedResult = getTracked();
-            
-            if (cachedResult!=null){
-                Transform3d goalCords = cachedResult.getBestCameraToTarget();
-                double x = goalCords.getX();
-                double y = goalCords.getY();
-                double theta = goalCords.getZ();
-                Pose2d goalPose2d = Paths.transformOffset(drivetrain.getState().Pose, x, y, 0);
-                ChassisSpeeds speeds = holonomicController.calculate(drivetrain.getState().Pose, goalPose2d, 1, goalPose2d.getRotation());
-                drivetrain.setControl(new SwerveRequest.RobotCentric()
-                                                        .withVelocityX(speeds.vxMetersPerSecond)
-                                                        .withVelocityY(speeds.vyMetersPerSecond));
-            }
-            
+                public Pose2d fixResult(){ // Buttons stop working after first command
+                    PhotonTrackedTarget result = getTracked();
+                    Transform3d pose;
+                    if (result ==null){
+                            result = cachedResult;
+                    }
+                    pose = result.getBestCameraToTarget();
+                    double x = pose.getX();
+                    double y = pose.getY();
+
+            Pose2d pose2D = drivetrain.getState().Pose;
+        
+            Pose2d newPose2D = Paths.transformOffset(pose2D, y * 39.3701, -x * 39.3701, 0);
+            return newPose2D;
+
 
         }
     

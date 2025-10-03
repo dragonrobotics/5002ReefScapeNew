@@ -215,9 +215,11 @@ public class RobotContainer {
                                                 currentCommand = pathCommand; 
                                                 pathCommand.schedule();}));
 
-      joystick.rightBumper().onTrue(runOnce(()->{Vision.fixResult();}));
+      joystick.rightBumper().onTrue(runOnce(()->{Command pathCommand = path.pathTo(Vision.fixResult());;
+                                                currentCommand = pathCommand; 
+                                                pathCommand.schedule();}));
 
-      joystick.b().onTrue(runOnce(()->{Command pathCommand = path.pathTo(Paths.transformOffset(path.closestTag(intakePoseList), 36,10, 180.0));
+      joystick.b().onTrue(runOnce(()->{Command pathCommand = Paths.pathTo(Paths.transformOffset(path.closestTag(intakePoseList), 36,10, 180.0));
                                                 currentCommand = sequence(pathCommand);
                                                 pathCommand.schedule();}));
   
