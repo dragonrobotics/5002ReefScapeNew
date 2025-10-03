@@ -57,6 +57,7 @@ public class vision extends SubsystemBase{
     
             robotToCam = new Transform3d(new Translation3d(0.3302, 0.1016, 0.3048), new Rotation3d(0,0,0));
             photonPoseEstimator =  new PhotonPoseEstimator(aprilTagFieldLayout, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, robotToCam);
+            photonPoseEstimator.setMultiTagFallbackStrategy(PoseStrategy.CLOSEST_TO_REFERENCE_POSE);
             pather = new Paths(drivetrain);
             visionSim = new VisionSystemSim("main");
             visionSim.addAprilTags(aprilTagFieldLayout);
@@ -110,7 +111,7 @@ public class vision extends SubsystemBase{
 
             Pose2d pose2D = drivetrain.getState().Pose;
         
-            Pose2d newPose2D = Paths.transformOffset(pose2D, x/0.0254 - 2, y/0.0254, 0);
+            Pose2d newPose2D = Paths.transformOffset(pose2D, x * 39.3701, y * 39.3701, 0);
             return newPose2D;
 
         }

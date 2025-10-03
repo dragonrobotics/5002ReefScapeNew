@@ -6,7 +6,7 @@ package frc.robot;
 
 import java.security.KeyStore.PrivateKeyEntry;
 
-import edu.wpi.first.epilogue.Epilogue;
+//import edu.wpi.first.epilogue.Epilogue;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.util.Units;
@@ -33,10 +33,8 @@ private final RobotContainer m_robotContainer;
 private final boolean kUseLimelight = false;
 SendableChooser<Boolean> toggleChooser = new SendableChooser<>();
 public Robot() {
-  Epilogue.bind(this);
+  //Epilogue.bind(this);
   m_robotContainer = new RobotContainer();
-
-  
 }
 
 @Override
