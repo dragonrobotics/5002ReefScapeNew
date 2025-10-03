@@ -10,6 +10,7 @@ import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
+import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.ctre.phoenix6.swerve.jni.SwerveJNI.DriveState;
 
 import org.photonvision.PhotonUtils;
@@ -20,13 +21,22 @@ import org.photonvision.simulation.VisionSystemSim;
 import edu.wpi.first.apriltag.AprilTag;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.controller.HolonomicDriveController;
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.trajectory.ExponentialProfile.State;
+import edu.wpi.first.math.trajectory.Trajectory;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.net.PortForwarder;
+import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -45,74 +55,89 @@ public class vision extends SubsystemBase{
         private final PhotonCameraSim cameraSim;
         private final CommandXboxController controller;
         private final TargetModel targetModel;
-    
-        public vision(CommandSwerveDrivetrain drivetrain, CommandXboxController controller){ 
-            
-            prevPose2d = drivetrain.getState().Pose;
-            this.controller = controller;
-            
-
-            camera = new PhotonCamera(Constants.OperatorConstants.cameraName);
-            aprilTagFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
-    
-            robotToCam = new Transform3d(new Translation3d(0.3302, 0.1016, 0.3048), new Rotation3d(0,0,0));
-            photonPoseEstimator =  new PhotonPoseEstimator(aprilTagFieldLayout, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, robotToCam);
-            photonPoseEstimator.setMultiTagFallbackStrategy(PoseStrategy.CLOSEST_TO_REFERENCE_POSE);
-            pather = new Paths(drivetrain);
-            visionSim = new VisionSystemSim("main");
-            visionSim.addAprilTags(aprilTagFieldLayout);
-            targetModel = new TargetModel(0.1651, 0.1651);
-            visionSim.addAprilTags(Constants.OperatorConstants.layout);
-            cameraProp = new SimCameraProperties();
-            cameraSim = new PhotonCameraSim(camera, cameraProp);
-
-            visionSim.addCamera(cameraSim, robotToCam);
-    
-            this.drivetrain = drivetrain;
-    
-        }
-    
-        public PhotonPipelineResult getResult(){
-            return camera.getLatestResult();
-        }
-
-
-    
-        public PhotonTrackedTarget getTracked(){
-            PhotonPipelineResult result = getResult();
-            if (result != null){
-                return result.getBestTarget();
-            }
-            else{
-                return null;
-            }
-        }
-    
-        public Optional<EstimatedRobotPose> getEstimatedGlobalPose(Pose2d prevEstimatedRobotPose) {
-            PhotonPipelineResult result = getResult();
-    
-            if (prevEstimatedRobotPose != null){
-                photonPoseEstimator.setReferencePose(prevEstimatedRobotPose); 
-            }
-            if (result != null){
-                return photonPoseEstimator.update(result);
-            }
-            else{
-                return Optional.empty();
-            }
-        }
-
-        public Pose2d fixResult(){ // Buttons stop working after first command
-            PhotonTrackedTarget result = getTracked();
-
-            Transform3d pose = result.getBestCameraToTarget();
-            double x = pose.getX();
-            double y = pose.getY();
-
-            Pose2d pose2D = drivetrain.getState().Pose;
+        private final PIDController xController;
+        private final PIDController yController;
+        private final ProfiledPIDController thetaController;
+        private final HolonomicDriveController holonomicController;
+        private PhotonTrackedTarget cachedResult;
         
-            Pose2d newPose2D = Paths.transformOffset(pose2D, x * 39.3701, y * 39.3701, 0);
-            return newPose2D;
+                public vision(CommandSwerveDrivetrain drivetrain, CommandXboxController controller){ 
+                    
+                    prevPose2d = drivetrain.getState().Pose;
+                    this.controller = controller;
+                    
+        
+                    camera = new PhotonCamera(Constants.OperatorConstants.cameraName);
+                    aprilTagFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
+        
+                    xController  = new PIDController(2.0, 0.0, 0.0);
+                    yController = new PIDController(0, 0, 0);
+                    thetaController = new ProfiledPIDController(3.0, 0.0, 0.0, new TrapezoidProfile.Constraints(2.0, 3.0));
+                    holonomicController = new HolonomicDriveController(xController, yController, thetaController);
+            
+                    robotToCam = new Transform3d(new Translation3d(0.3302, 0.1016, 0.3048), new Rotation3d(0,0,0));
+                    photonPoseEstimator =  new PhotonPoseEstimator(aprilTagFieldLayout, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, robotToCam);
+                    photonPoseEstimator.setMultiTagFallbackStrategy(PoseStrategy.CLOSEST_TO_REFERENCE_POSE);
+                    pather = new Paths(drivetrain);
+                    visionSim = new VisionSystemSim("main");
+                    visionSim.addAprilTags(aprilTagFieldLayout);
+                    targetModel = new TargetModel(0.1651, 0.1651);
+                    visionSim.addAprilTags(Constants.OperatorConstants.layout);
+                    cameraProp = new SimCameraProperties();
+                    cameraSim = new PhotonCameraSim(camera, cameraProp);
+                    cachedResult = null;
+        
+                    visionSim.addCamera(cameraSim, robotToCam);
+            
+                    this.drivetrain = drivetrain;
+            
+                }
+            
+                public PhotonPipelineResult getResult(){
+                    return camera.getLatestResult();
+                }
+        
+        
+            
+                public PhotonTrackedTarget getTracked(){
+                    PhotonPipelineResult result = getResult();
+                    if (result != null){
+                        return result.getBestTarget();
+                    }
+                    else{
+                        return null;
+                    }
+                }
+            
+                public Optional<EstimatedRobotPose> getEstimatedGlobalPose(Pose2d prevEstimatedRobotPose) {
+                    PhotonPipelineResult result = getResult();
+            
+                    if (prevEstimatedRobotPose != null){
+                        photonPoseEstimator.setReferencePose(prevEstimatedRobotPose); 
+                    }
+                    if (result != null){
+                        return photonPoseEstimator.update(result);
+                    }
+                    else{
+                        return Optional.empty();
+                    }
+                }
+        
+                public void fixResult(){ // Buttons stop working after first command
+                    cachedResult = getTracked();
+            
+            if (cachedResult!=null){
+                Transform3d goalCords = cachedResult.getBestCameraToTarget();
+                double x = goalCords.getX();
+                double y = goalCords.getY();
+                double theta = goalCords.getZ();
+                Pose2d goalPose2d = Paths.transformOffset(drivetrain.getState().Pose, x, y, 0);
+                ChassisSpeeds speeds = holonomicController.calculate(drivetrain.getState().Pose, goalPose2d, 1, goalPose2d.getRotation());
+                drivetrain.setControl(new SwerveRequest.RobotCentric()
+                                                        .withVelocityX(speeds.vxMetersPerSecond)
+                                                        .withVelocityY(speeds.vyMetersPerSecond));
+            }
+            
 
         }
     

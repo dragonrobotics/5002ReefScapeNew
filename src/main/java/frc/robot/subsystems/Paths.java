@@ -43,44 +43,44 @@ public class Paths extends SubsystemBase {
     private Boolean[][] lefties;
     private Boolean[][] righties;
 
-    private PathConstraints contraints; 
-    public Paths(CommandSwerveDrivetrain driveTrain){
-        
-        group1left = new Boolean[3];
-        group1right = new Boolean[3];
-
-        group2left = new Boolean[3];
-        group2right = new Boolean[3];
-
-        group3left = new Boolean[3];
-        group3right = new Boolean[3];
-
-        group4left = new Boolean[3];
-        group4right = new Boolean[3];
-
-        group5left = new Boolean[3];
-        group5right = new Boolean[3];
-
-        group6left = new Boolean[3];
-        group6right = new Boolean[3];
-
-        lefties = new Boolean[6][3];
-        righties = new Boolean[6][3];
-
-        buttonTable = NetworkTableInstance.getDefault().getTable("VirtualButtonBoard");
-        drivetrain = driveTrain;
-        contraints = new PathConstraints(
-            1.5, // 3 m/s
-            4.0,
-            Units.degreesToRadians(540), 
-            Units.degreesToRadians(720));
-    }
-
-    public Command pathTo(Pose2d pose){
-        Command pathFindingCommand;
-        pathFindingCommand = AutoBuilder.pathfindToPose(
-                pose,
-                contraints,
+    private static PathConstraints contraints; 
+        public Paths(CommandSwerveDrivetrain driveTrain){
+            
+            group1left = new Boolean[3];
+            group1right = new Boolean[3];
+    
+            group2left = new Boolean[3];
+            group2right = new Boolean[3];
+    
+            group3left = new Boolean[3];
+            group3right = new Boolean[3];
+    
+            group4left = new Boolean[3];
+            group4right = new Boolean[3];
+    
+            group5left = new Boolean[3];
+            group5right = new Boolean[3];
+    
+            group6left = new Boolean[3];
+            group6right = new Boolean[3];
+    
+            lefties = new Boolean[6][3];
+            righties = new Boolean[6][3];
+    
+            buttonTable = NetworkTableInstance.getDefault().getTable("VirtualButtonBoard");
+            drivetrain = driveTrain;
+            contraints = new PathConstraints(
+                2.4, // 3 m/s2.4
+                4.0,
+                Units.degreesToRadians(540), 
+                Units.degreesToRadians(720));
+        }
+    
+        public static Command pathTo(Pose2d pose){
+            Command pathFindingCommand;
+            pathFindingCommand = AutoBuilder.pathfindToPose(
+                    pose,
+                    contraints,
                 0.0
                 );
         return pathFindingCommand;

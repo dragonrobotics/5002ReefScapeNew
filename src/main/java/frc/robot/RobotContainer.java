@@ -110,7 +110,7 @@ public class RobotContainer {
     public final static Arm arm = new Arm();
     public final static Intake intake = new Intake();
     public final Climber climber = new Climber();
-    public final vision vision;
+    public final vision Vision;
     public SendableChooser<Boolean> mode = new SendableChooser<Boolean>();
     private final SendableChooser<Command> autoChooser;
     public Boolean isRightPose;
@@ -158,8 +158,8 @@ public class RobotContainer {
       autoChooser = AutoBuilder.buildAutoChooser("Middle L4 Intake");
       SmartDashboard.putData("Auto Mode", autoChooser);
       
-      vision = new vision(drivetrain, joystick);
-      align = new autoRotate(drivetrain, vision, joystick);
+      Vision = new vision(drivetrain, joystick);
+      align = new autoRotate(drivetrain, Vision, joystick);
       path = new Paths(drivetrain);
       if (DriverStation.getAlliance().isPresent()){
         DriverStation.Alliance alliance = DriverStation.getAlliance().get();
@@ -211,16 +211,13 @@ public class RobotContainer {
       joystick.back().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
       
       //Auto Allign auwto April Tag
-      joystick.leftBumper().onTrue(runOnce(()->{Command pathCommand = path.pathTo(path.transformOffset(path.closestTagS(poseList, "left"), 40, 0.0, 180.0));;
-
+      joystick.leftBumper().onTrue(runOnce(()->{Command pathCommand = path.pathTo(Paths.transformOffset(path.closestTagS(poseList, "left"), 40, 0.0, 180.0));;
                                                 currentCommand = pathCommand; 
                                                 pathCommand.schedule();}));
 
-      joystick.rightBumper().onTrue(runOnce(()->{Command pathCommand = path.pathTo(vision.fixResult());
-                                                currentCommand = pathCommand;
-                                                pathCommand.schedule();}));
+      joystick.rightBumper().onTrue(runOnce(()->{Vision.fixResult();}));
 
-      joystick.b().onTrue(runOnce(()->{Command pathCommand = path.pathTo(path.transformOffset(path.closestTag(intakePoseList), 36,10, 180.0));
+      joystick.b().onTrue(runOnce(()->{Command pathCommand = path.pathTo(Paths.transformOffset(path.closestTag(intakePoseList), 36,10, 180.0));
                                                 currentCommand = sequence(pathCommand);
                                                 pathCommand.schedule();}));
   
