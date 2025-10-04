@@ -44,6 +44,7 @@ public class Paths extends SubsystemBase {
     private Boolean[][] righties;
 
     private static PathConstraints contraints; 
+    private static PathConstraints constraints1;
         public Paths(CommandSwerveDrivetrain driveTrain){
             
             group1left = new Boolean[3];
@@ -74,7 +75,10 @@ public class Paths extends SubsystemBase {
                 4.0,
                 Units.degreesToRadians(540), 
                 Units.degreesToRadians(720));
+
+            constraints1 = new PathConstraints(1.0, 1, Units.degreesToRadians(10), Units.degreesToRadians(100));
         }
+            
     
         public static Command pathTo(Pose2d pose){
             Command pathFindingCommand;
@@ -85,6 +89,16 @@ public class Paths extends SubsystemBase {
                 );
         return pathFindingCommand;
     }
+
+    public static Command pathTO(Pose2d pose){
+        Command pathFindingCommand;
+        pathFindingCommand = AutoBuilder.pathfindToPose(
+                pose,
+                constraints1,
+            0.0
+            );
+    return pathFindingCommand;
+}
 
 
     public static Pose2d transformOffset(

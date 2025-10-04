@@ -215,9 +215,27 @@ public class RobotContainer {
                                                 currentCommand = pathCommand; 
                                                 pathCommand.schedule();}));
 
-      joystick.rightBumper().onTrue(runOnce(()->{Command pathCommand = path.pathTo(Vision.fixResult());;
-                                                currentCommand = pathCommand; 
-                                                pathCommand.schedule();}));
+      joystick.rightBumper().onTrue(runOnce(()->{Command pathCommand = path.pathTO(Vision.getPoseTracked());;
+      currentCommand = pathCommand; 
+      pathCommand.schedule();}));
+
+      // joystick.rightBumper().whileTrue(run(()->{
+      //       Pose2d poser = Vision.fixResult(6.0);
+      //       Command align = Vision.alignToPose(poser,6);
+      //       if (align != null){
+      //         currentCommand = align;
+      //         currentCommand.schedule();
+      //       };
+    
+      // }).finallyDo(()->
+      // drivetrain.applyRequest(() ->
+      //         drive.withVelocityX(-joystick.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
+      //             .withVelocityY(-joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
+      //             .withRotationalRate(-joystick.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
+      //     )));
+
+
+    
 
       joystick.b().onTrue(runOnce(()->{Command pathCommand = Paths.pathTo(Paths.transformOffset(path.closestTag(intakePoseList), 36,10, 180.0));
                                                 currentCommand = sequence(pathCommand);
@@ -230,8 +248,24 @@ public class RobotContainer {
 
       //Use Shooter
       joystick.rightTrigger().whileTrue(shoot());
+      joystick.leftTrigger().whileTrue(intake());
       joystick.y().whileTrue(climb());
       joystick.x().whileTrue(Unclimb());
+
+      joystick.povUp().whileTrue(run(()->{
+        Command align = Vision.mover(0.25);
+          currentCommand = align;
+          currentCommand.schedule();
+
+  }).finallyDo(()->
+  drivetrain.applyRequest(() ->
+          drive.withVelocityX(-joystick.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
+              .withVelocityY(-joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
+              .withRotationalRate(-joystick.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
+      )));
+
+
+
 
       //CALIBRATION MODE BINDS
       if(mode.getSelected() == true){

@@ -39,9 +39,11 @@ import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants;
+import frc.robot.Constants.OperatorConstants;
 
 public class vision extends SubsystemBase{
     private Pose2d prevPose2d;
@@ -75,7 +77,7 @@ public class vision extends SubsystemBase{
                     yController = new PIDController(0, 0, 0);
                     thetaController = new ProfiledPIDController(3.0, 0.0, 0.0, new TrapezoidProfile.Constraints(2.0, 3.0));
                     holonomicController = new HolonomicDriveController(xController, yController, thetaController);
-            
+                    // holonomicController.setTolerance(new Pose2d(0.1, 0.1, null));
                     robotToCam = new Transform3d(new Translation3d(0.3302, 0.1016, 0.3048), new Rotation3d(0,0,0));
                     photonPoseEstimator =  new PhotonPoseEstimator(aprilTagFieldLayout, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, robotToCam);
                     photonPoseEstimator.setMultiTagFallbackStrategy(PoseStrategy.CLOSEST_TO_REFERENCE_POSE);
@@ -96,6 +98,7 @@ public class vision extends SubsystemBase{
             
                 public PhotonPipelineResult getResult(){
                     return camera.getLatestResult();
+
                 }
         
         
@@ -108,6 +111,12 @@ public class vision extends SubsystemBase{
                     else{
                         return null;
                     }
+                }
+
+                public Pose2d getPoseTracked(){
+                    int i = getTracked().getFiducialId();
+                    return OperatorConstants.layout.getTagPose(i).get().toPose2d();
+                    
                 }
             
                 public Optional<EstimatedRobotPose> getEstimatedGlobalPose(Pose2d prevEstimatedRobotPose) {
@@ -124,23 +133,44 @@ public class vision extends SubsystemBase{
                     }
                 }
         
-                public Pose2d fixResult(){ // Buttons stop working after first command
+                public Pose2d fixResult(double variable){ // Buttons stop working after first command
                     PhotonTrackedTarget result = getTracked();
-                    Transform3d pose;
-                    if (result ==null){
-                            result = cachedResult;
+                    if (result !=null){
+                        Transform3d pose = result.getBestCameraToTarget();
+                        double y = pose.getY();
+                        double x = pose.getY();
+    
+                        Pose2d pose2D = drivetrain.getState().Pose;
+            
+                        Pose2d newPose2D = Paths.transformOffset(pose2D, (y * 39.3701) + variable, x * 39.3701, 0);
+                        return newPose2D;
+
+                    }else{
+                        return null;
                     }
-                    pose = result.getBestCameraToTarget();
-                    double x = pose.getX();
-                    double y = pose.getY();
-
-            Pose2d pose2D = drivetrain.getState().Pose;
-        
-            Pose2d newPose2D = Paths.transformOffset(pose2D, y * 39.3701, -x * 39.3701, 0);
-            return newPose2D;
-
+                    
+            
 
         }
+                public Command alignToPose(Pose2d poser, double variable){
+                    poser = fixResult(variable);
+                    if (poser != null){
+                        ChassisSpeeds speeds = holonomicController.calculate(drivetrain.getState().Pose, poser, 1.0, drivetrain.getState().Pose.getRotation());
+                        return drivetrain.applyRequest(()-> new SwerveRequest.RobotCentric().withVelocityY(speeds.vyMetersPerSecond * 2.5));
+                    }
+                    else{
+                        return null;
+                    }
+                }
+
+                public Command mover(double speed){
+                    return drivetrain.applyRequest(()-> new SwerveRequest.RobotCentric().withVelocityX(speed));
+                }
+
+                public Boolean getReached(){
+                    return holonomicController.atReference();
+                }
+
     
     @Override
     public void periodic() {
