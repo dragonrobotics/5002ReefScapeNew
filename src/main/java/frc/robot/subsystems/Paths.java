@@ -76,7 +76,7 @@ public class Paths extends SubsystemBase {
                 Units.degreesToRadians(540), 
                 Units.degreesToRadians(720));
 
-            constraints1 = new PathConstraints(1.0, 1, Units.degreesToRadians(10), Units.degreesToRadians(100));
+            constraints1 = new PathConstraints(0.30, 0.3, Units.degreesToRadians(100), Units.degreesToRadians(200));
         }
             
     
