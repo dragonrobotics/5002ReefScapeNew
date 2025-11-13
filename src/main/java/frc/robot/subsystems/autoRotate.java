@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants;
 import frc.robot.RobotContainer;
@@ -39,8 +40,9 @@ public class autoRotate extends SubsystemBase{
         private final Pose2d[] blueAutoPoses = Constants.blueAutoPoses;
         private final Pose2d[] redAutoPoses = Constants.redAutoPoses;
         
+                // private CommandXboxController controller;
                 private CommandXboxController controller;
-        
+
                 public Pose2d getClosestTag(){
                     Pose2d closestTag = new Pose2d();
                     Pose2d currentPose = driveTrain.getState().Pose;
@@ -83,7 +85,7 @@ public class autoRotate extends SubsystemBase{
                     return goalPose;
                 }
             
-                public autoRotate(CommandSwerveDrivetrain driveTrain, vision vision, CommandXboxController controller){
+                public autoRotate(CommandSwerveDrivetrain driveTrain, vision vision, CommandXboxController controller /*CommandXboxController controller*/){
             
                     this.vision = vision;
                     this.controller = controller;
