@@ -9,6 +9,7 @@ import static edu.wpi.first.units.Units.*;
 import org.json.simple.JSONObject;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
+import java.lang.ModuleLayer.Controller;
 import java.nio.file.Files;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
@@ -48,13 +49,13 @@ import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
+import frc.robot.commands.AutoAlignToTagCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.Intake;
-import frc.robot.subsystems.autoRotate;
 import frc.robot.subsystems.vision;
 import frc.robot.subsystems.Paths;
 
@@ -115,8 +116,6 @@ public class RobotContainer {
 
     public final CommandSwerveDrivetrain drivetrain; 
     public final Paths path;
-    //public final autoAlign align; 
-    public final autoRotate align;
     public final static Elevator elevator = new Elevator();
     public final static Arm arm = new Arm();
     public final static Intake intake = new Intake();
@@ -128,6 +127,7 @@ public class RobotContainer {
     public List<Pose2d> poseList = new ArrayList<>();
     public List<Pose2d> intakePoseList = new ArrayList<>();
     public List<Pose2d> completedPoses = new ArrayList<>();
+    public AutoAlignToTagCommand alignCommand;
     public Command currentCommand;
 
     public RobotContainer() {
@@ -170,8 +170,8 @@ public class RobotContainer {
       SmartDashboard.putData("Auto Mode", autoChooser);
       
       Vision = new vision(drivetrain);
-      align = new autoRotate(drivetrain, Vision, joystick);
       path = new Paths(drivetrain);
+      alignCommand = new AutoAlignToTagCommand(Vision, drivetrain);
       if (DriverStation.getAlliance().isPresent()){
         DriverStation.Alliance alliance = DriverStation.getAlliance().get();
 
@@ -278,6 +278,7 @@ public class RobotContainer {
       //Use Shooter
       joystick.rightTrigger().whileTrue(shoot());
       fireButton.whileTrue(shoot());
+      joystick.leftBumper().whileTrue(alignCommand);
       joystick.leftTrigger().whileTrue(intake());
       // joystick.square().whileTrue(climb());
       // joystick.circle().whileTrue(Unclimb());
