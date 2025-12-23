@@ -1,0 +1,135 @@
+{
+	"name": "5002_reefscape",
+	"rotations": [
+		{
+			"axis": "x",
+			"degrees": 90
+		},
+		{
+			"axis": "y",
+			"degrees": 0
+		},
+		{
+			"axis": "z",
+			"degrees": 180
+		}
+	],
+	"position": [
+		0.3429,
+		0.0063913766,
+		0.0476504
+	],
+	"cameras": [
+		{
+			"name": "photonvision",
+			"rotations": [
+				{
+					"axis": "x",
+					"degrees": 0
+				},
+				{
+					"axis": "y",
+					"degrees": 0
+				},
+				{
+					"axis": "z",
+					"degrees": 0
+				}
+			],
+			"position": [
+				0.3302, 
+				0.1016, 
+				0.3048
+			],
+			"resolution": [
+				1920,
+				1080
+			],
+			"fov": 80
+		}
+	],
+	"components": [
+		{
+		"zeroedRotations": [
+			{
+				"axis": "x",
+				"degrees": 90
+			},
+			{
+				"axis": "y",
+				"degrees": 0
+			},
+			{
+				"axis": "z",
+				"degrees": 180
+			}
+		],
+		"zeroedPosition": [
+			0.3429,
+			0.0016288766,
+			-0.1905
+		]
+		},
+		{
+		"zeroedRotations": [
+			{
+				"axis": "x",
+				"degrees": 90
+			},
+			{
+				"axis": "y",
+				"degrees": 0
+			},
+			{
+				"axis": "z",
+				"degrees": 180
+			}
+		],
+		"zeroedPosition": [
+			0.3429,
+			0.3047586234,
+			-0.3175
+		]
+		},{
+		"zeroedRotations": [
+			{
+				"axis": "x",
+				"degrees": 90
+			},
+			{
+				"axis": "y",
+				"degrees": 0
+			},
+			{
+				"axis": "z",
+				"degrees": 180
+			}
+		],
+		"zeroedPosition": [
+			0.3429,
+			0.13974138,
+			-0.1397
+		]
+		},{
+		"zeroedRotations": [
+			{
+				"axis": "x",
+				"degrees": 90
+			},
+			{
+				"axis": "y",
+				"degrees": 0
+			},
+			{
+				"axis": "z",
+				"degrees": 180
+			}
+		],
+		"zeroedPosition": [
+			0.3429,
+			0.13974138,
+			-0.1397
+		]
+		},{},{}
+	]
+}	
