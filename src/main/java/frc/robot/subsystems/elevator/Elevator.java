@@ -1,5 +1,8 @@
 package frc.robot.subsystems.elevator;
 
+import java.util.function.IntSupplier;
+
+import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
@@ -20,20 +23,22 @@ public class Elevator extends SubsystemBase {
     private final ProfiledPIDController elevatorPID = new ProfiledPIDController(
         PID.Elevator.kP,
         PID.Elevator.kI,
-        PID.Elevator.KD,
+        PID.Elevator.kD,
         new TrapezoidProfile.Constraints(
             PID.Elevator.maxVelocity,
             PID.Elevator.maxAcceleration
         )
     );
 
+    private final ElevatorFeedforward elevatorFeedForward = new ElevatorFeedforward(0, 0.25, 0.1);
+
     // Publishes the poses declared below.
-    StructPublisher<Pose3d> firstStagePosePublisher = NetworkTableInstance.getDefault().getStructTopic(
+    private final StructPublisher<Pose3d> firstStagePosePublisher = NetworkTableInstance.getDefault().getStructTopic(
         "Elevator First Stage Pose", 
         Pose3d.struct
     ).publish();
 
-    StructPublisher<Pose3d> secondStagePosePublisher = NetworkTableInstance.getDefault().getStructTopic(
+    private final StructPublisher<Pose3d> secondStagePosePublisher = NetworkTableInstance.getDefault().getStructTopic(
         "Elevator Second Stage Pose", 
         Pose3d.struct
     ).publish();
@@ -66,6 +71,8 @@ public class Elevator extends SubsystemBase {
         this.elevatorIO = elevatorIO;
 
         elevatorPID.setTolerance(PID.Elevator.tolerance);
+
+        setHeightGoal(ElevatorSetpoint.Default);
     }
 
     public Command runElevator(double speed) {
@@ -94,18 +101,36 @@ public class Elevator extends SubsystemBase {
         );
     }
 
-    public Command goToHeight(ElevatorSetpoint elevatorSetpoint) {
-        this.elevatorSetpoint = elevatorSetpoint;
+    public Command setHeightGoal(ElevatorSetpoint elevatorSetpoint) {
+        return runOnce(
+            () -> {
+                this.elevatorSetpoint = elevatorSetpoint;
 
-        elevatorPID.reset(
-            elevatorInputs.height, 
-            elevatorInputs.velocity
+                elevatorPID.reset(
+                    elevatorInputs.height,
+                    elevatorInputs.velocity
+                );
+
+                elevatorPID.setGoal(
+                    elevatorSetpoint.height
+                );
+            }
         );
+    }
 
-        elevatorPID.setGoal(elevatorSetpoint.height);
+    public Command moveElevatorToSetpoint() {
+        return run(
+            () -> elevatorIO.runElevator(
+                elevatorPID.calculate(elevatorInputs.height)
+            )
+        );
+    }
 
-        return runElevator(
-            elevatorPID.calculate(elevatorInputs.height)
+    public Command maintainElevatorHeight() {
+        return run(
+            () -> elevatorIO.runElevatorVolts(
+                elevatorFeedForward.calculate(1, 1)
+            )
         );
     }
 
@@ -113,6 +138,17 @@ public class Elevator extends SubsystemBase {
     public void periodic() {
         elevatorIO.updateInputs(elevatorInputs);
 
+        SmartDashboard.putNumber("Elevator Height", elevatorInputs.height);
+        SmartDashboard.putNumber("Elevator Velocity", elevatorInputs.velocity);
+
+        SmartDashboard.putNumber("Elevator Motor Amps", elevatorInputs.motorCurrent);
+
+        SmartDashboard.putData("Elevator PID Controller", elevatorPID);
+
+    }
+
+    @Override
+    public void simulationPeriodic() {
         firstStagePose3d = new Pose3d(
             0, 
             -0.13335, 
@@ -137,12 +173,5 @@ public class Elevator extends SubsystemBase {
 
         firstStagePosePublisher.set(firstStagePose3d);
         secondStagePosePublisher.set(secondStagePose3d);
-
-        SmartDashboard.putData("Elevator PID Controller", elevatorPID);
-
-        SmartDashboard.putNumber("Elevator Height", elevatorInputs.height);
-        SmartDashboard.putNumber("Elevator Velocity", elevatorInputs.velocity);
-
-        SmartDashboard.putNumber("Elevator Motor Amps", elevatorInputs.motorCurrent);
     }
 }

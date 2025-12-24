@@ -1,6 +1,5 @@
 package frc.robot.subsystems.arm;
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
@@ -66,33 +65,31 @@ public class Arm extends SubsystemBase {
         this.armIO = armIO;
         this.elevatorIO = elevatorIO;
 
-        armPID.setTolerance(
-            Units.radiansToDegrees(
-                PID.Arm.tolerance
-            )
-        );
+        armPID.setTolerance(PID.Arm.tolerance);
 
-        setRotationGoal(0.1);
+        armPID.enableContinuousInput(0, 360);
+
+        setRotationGoal(ArmSetpoint.Default);
     }
 
-    public Command runArm(double speed) {
-        return run(
-            () -> armIO.runArm(speed)
-        );
+    public void runArm(double speed) {
+        armIO.runArm(speed);
     }
 
-    public Command stopArm() {
-        return run(
-            () -> armIO.stopArm()
-        );
+    public void stopArm() {
+        armIO.stopArm();
     }
 
     public Command rotateClockwise() {
-        return runArm(1);
+        return run(
+            () -> runArm(1)
+        );
     }
 
     public Command rotateCounterClockwise() {
-        return runArm(-1);
+        return run(
+            () -> runArm(-1)
+        );
     }
 
     public Command calibrate() {
@@ -101,28 +98,26 @@ public class Arm extends SubsystemBase {
         );
     }
 
-    public Command setRotationGoal(double value) {
+    public Command setRotationGoal(ArmSetpoint armSetpoint) {
         return runOnce(
             () -> {
-                // this.armSetpoint = armSetpoint;
+                this.armSetpoint = armSetpoint;
 
                 armPID.reset(armInputs.angle, armInputs.velocity);
-                armPID.setGoal(Units.degreesToRadians(value));                    
+                armPID.setGoal(armSetpoint.angle);  
+                
+                armPID.disableContinuousInput();
             }
         );
     }
 
     public Command rotateToSetpoint() {
-        return run(() -> 
-            armIO.runArm(
-                MathUtil.clamp(
-                    armPID.calculate(armInputs.angle),
-                    -1.0, 1.0
-                )
+        return run(
+            () -> runArm(
+                armPID.calculate(armInputs.angle)
             )
         );
     }
-    
 
     @Override
     public void periodic() {
@@ -130,10 +125,10 @@ public class Arm extends SubsystemBase {
 
         armIO.updateInputs(armInputs);
 
-        SmartDashboard.putNumber("Arm Angle", Units.radiansToDegrees(armInputs.angle));
-        SmartDashboard.putNumber("Arm Velocity", Units.radiansToDegrees(armInputs.velocity));
+        SmartDashboard.putNumber("Arm Angle", armInputs.angle);
+        SmartDashboard.putNumber("Arm Velocity", armInputs.velocity);
 
-        SmartDashboard.putNumber("Arm Absolute Angle", Units.radiansToDegrees(armInputs.absAngle));
+        SmartDashboard.putNumber("Arm Absolute Angle", armInputs.absAngle);
 
         SmartDashboard.putNumber("Arm Motor Amps", armInputs.motorCurrent);
 
@@ -145,10 +140,10 @@ public class Arm extends SubsystemBase {
         armPose3d = new Pose3d(
             0, 
             -0.0047752, 
-            (elevatorInputs.height * 2) + 0.1873504,
+            Units.inchesToMeters(elevatorInputs.height * 2) + 0.1873504,
             new Rotation3d(
                 0,
-                Units.degreesToRadians(90 - 54.133228) + armInputs.angle, 
+                Units.degreesToRadians(90 - 54.133228 + armInputs.angle), 
                 0
             )
         );

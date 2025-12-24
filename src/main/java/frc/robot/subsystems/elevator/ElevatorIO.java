@@ -20,6 +20,8 @@ public interface ElevatorIO {
 
     public default void runElevator(double speed) {}
 
+    public default void runElevatorVolts(double volts) {}
+
     public default void stopElevator() {}
 
     public default void resetEncoder() {}

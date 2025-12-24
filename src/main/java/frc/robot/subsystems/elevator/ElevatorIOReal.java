@@ -44,6 +44,11 @@ public class ElevatorIOReal implements ElevatorIO {
     }
 
     @Override
+    public void runElevatorVolts(double volts) {
+        elevatorMotor.setVoltage(volts);
+    }
+
+    @Override
     public void stopElevator() {
         elevatorMotor.stopMotor();
     }

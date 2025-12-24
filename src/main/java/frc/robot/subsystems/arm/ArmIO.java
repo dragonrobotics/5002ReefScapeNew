@@ -1,7 +1,13 @@
 package frc.robot.subsystems.arm;
 
-public interface ArmIO {
+import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.SparkMax;
 
+import frc.robot.Constants.CAN_IDs;
+
+public interface ArmIO {
+    static final SparkMax armMotor = new SparkMax(CAN_IDs.armMotor, MotorType.kBrushless);
+    
     class ArmInputs {
         double angle = 0;
         double absAngle = 0;

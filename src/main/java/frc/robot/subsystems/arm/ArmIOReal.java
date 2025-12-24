@@ -4,17 +4,11 @@ import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkMaxConfig;
-
-import frc.robot.Constants.CAN_IDs;
 
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
 public class ArmIOReal implements ArmIO {
-    public static final SparkMax armMotor = new SparkMax(CAN_IDs.armMotor, MotorType.kBrushless);
-
     private final RelativeEncoder armRelEncoder = armMotor.getEncoder();
     private final AbsoluteEncoder armAbsEncoder = armMotor.getAbsoluteEncoder();
 

@@ -3,6 +3,7 @@ package frc.robot;
 import static edu.wpi.first.units.Units.Degrees;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
@@ -36,26 +37,68 @@ public class Constants {
 
     public static class PID {
         public static class Arm {
-            public static final double kP = 0.1;
-            public static final double kI = 0.0;
-            public static final double kD = 0.0;
+            public static final double kP;
+            public static final double kI;
+            public static final double kD;
 
             public static final double maxVelocity = 99;
             public static final double maxAcceleration = 99;
 
             public static final double tolerance = 2;
+
+            static {
+                if (Robot.isSimulation()) {
+                    kP = 0.1;
+                    kI = 0.2;
+                    kD = 0.01;
+                } else {
+                    kP = 0.1;
+                    kI = 0;
+                    kD = 0;
+                }
+            }
         }
 
         public static class Elevator {
-            public static final double kP = 0.8;
-            public static final double kI = 0;
-            public static final double KD = 0.05;
+            public static final double kP;
+            public static final double kI;
+            public static final double kD;
 
-            public static final double maxVelocity = 5;
-            public static final double maxAcceleration = 2;
+            public static final double maxVelocity = 45;
+            public static final double maxAcceleration = 18;
 
             public static final double tolerance = 0.25;
+
+            static {
+                if (Robot.isSimulation()) {
+                    kP = 0.4;
+                    kI = 0.2;
+                    kD = 0.01;
+                } else {
+                    kP = 0.8;
+                    kI = 0;
+                    kD = 0.05;
+                }
+            }
         }       
+    }
+    
+    public static class ElevatorFeedForward {
+        public static final double kS;
+        public static final double kG;
+        public static final double kV;
+
+        static {
+            if (Robot.isSimulation()) {
+                kS = 0;
+                kG = 0.15;
+                kV = 0.08;
+            } else {
+                kS = 0;
+                kG = 0.25;
+                kV = 0.1;
+            }
+        }
     }
 
     public static class InitialSimPose {
@@ -86,6 +129,8 @@ public class Constants {
 
         public static final Pose2d[] blueIntakePoses = new Pose2d[2];
         public static final Pose2d[] redIntakePoses = new Pose2d[2];
+
+        public static final List<Integer> intakePoseTagIDs = List.of(1, 2, 12, 13);
 
         static {
             blueAutoPoses[0] = (tagLayout.getTagPose(21).get().toPose2d());

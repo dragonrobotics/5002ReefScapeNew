@@ -30,6 +30,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.Constants.AprilTagPoses;
 import frc.robot.Constants.PhotonVision;
 import frc.robot.subsystems.swerve.CommandSwerveDrivetrain;
 
@@ -148,8 +149,17 @@ public class Vision extends SubsystemBase {
 
                     Translation2d newPoseTranslation = tagPose2d.getTranslation().plus(poseOffset);
 
+                    boolean tagIsIntakePose = AprilTagPoses.intakePoseTagIDs.contains(target.getFiducialId());
+                    double rotationalOffset;
+
+                    if (tagIsIntakePose) {
+                        rotationalOffset = 0;
+                    } else {
+                        rotationalOffset = 180;
+                    }
+
                     Rotation2d newPoseHeading = tagPose2d.getRotation().plus(
-                        Rotation2d.fromDegrees(180)
+                        Rotation2d.fromDegrees(rotationalOffset)
                     );
 
                     return new Pose2d(

@@ -1,7 +1,6 @@
 package frc.robot.subsystems.elevator;
 
 import com.revrobotics.sim.SparkMaxSim;
-import com.revrobotics.sim.SparkRelativeEncoderSim;
 
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
@@ -15,8 +14,6 @@ public class ElevatorIOSim implements ElevatorIO {
 
     private final SparkMaxSim elevatorSimMotor = new SparkMaxSim(elevatorMotor, genericSimMotors);
 
-    private final SparkRelativeEncoderSim elevatorSimEncoder = elevatorSimMotor.getRelativeEncoderSim();
-
     private final ElevatorSim elevatorSim = new ElevatorSim(
         genericSimMotors,
         3,
@@ -26,26 +23,14 @@ public class ElevatorIOSim implements ElevatorIO {
         Units.inchesToMeters(28),
         true,
         Units.inchesToMeters(0),
-        0,
+        0.0,
         0.0
     );
 
     @Override
     public void updateInputs(ElevatorInputs elevatorInputs) {
         elevatorSim.setInput(elevatorSimMotor.getAppliedOutput() * RoboRioSim.getVInVoltage());
-
         elevatorSim.update(Constants.simUpdateLatency);
-
-        elevatorSimMotor.iterate(
-            elevatorSim.getVelocityMetersPerSecond(),
-            RoboRioSim.getVInVoltage(),
-            Constants.xboxControllerPort
-        );
-
-        elevatorSimEncoder.iterate(
-            elevatorSim.getVelocityMetersPerSecond(),
-            Constants.simUpdateLatency
-        );
 
         RoboRioSim.setVInVoltage(
             BatterySim.calculateDefaultBatteryLoadedVoltage(
@@ -53,15 +38,28 @@ public class ElevatorIOSim implements ElevatorIO {
             )
         );
 
-        elevatorInputs.height = elevatorSimEncoder.getPosition();
-        elevatorInputs.velocity = elevatorSimEncoder.getVelocity();
+        elevatorInputs.height = Units.metersToInches(
+            elevatorSim.getPositionMeters()
+        );
 
-        elevatorInputs.motorCurrent = elevatorSimMotor.getMotorCurrent();
+        elevatorInputs.velocity = Units.metersToInches(
+            elevatorSim.getVelocityMetersPerSecond()
+        );
+
+        elevatorInputs.motorCurrent = elevatorSim.getCurrentDrawAmps();
     }
 
     @Override
     public void runElevator(double speed) {
         elevatorSimMotor.setAppliedOutput(speed);
+    }
+
+    @Override
+    public void runElevatorVolts(double volts) {
+        elevatorSimMotor.setAppliedOutput(
+            volts / RoboRioSim.getVInVoltage()
+        );
+        
     }
 
     @Override
@@ -71,6 +69,6 @@ public class ElevatorIOSim implements ElevatorIO {
 
     @Override
     public void resetEncoder() {
-        elevatorSimEncoder.setPosition(0);
+        elevatorSim.setState(0, 0);
     }
 }

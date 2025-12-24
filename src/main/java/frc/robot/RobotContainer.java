@@ -11,13 +11,13 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.wpilibj2.command.Commands.either;
 import static edu.wpi.first.wpilibj2.command.Commands.runOnce;
+import static edu.wpi.first.wpilibj2.command.Commands.sequence;
 
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -105,6 +105,16 @@ public class RobotContainer {
 				elevator = new Elevator(elevatorIOSim);
 				intake = new Intake(intakeIOSim);
 
+				swerveDrive.resetPose(
+					new Pose2d(
+						InitialSimPose.xPosition,
+						InitialSimPose.yPosition,
+						new Rotation2d(
+							InitialSimPose.angle
+						)
+					)
+				);
+
 				break;
 		
 			default:
@@ -114,24 +124,7 @@ public class RobotContainer {
 				intake = new Intake(intakeIOReal);
 		}
 
-		swerveDrive.resetPose(
-			new Pose2d(
-				InitialSimPose.xPosition,
-				InitialSimPose.yPosition,
-				new Rotation2d(
-					InitialSimPose.angle
-				)
-			)
-		);
-
 		configureUniversalBindings();
-
-		// Configures different bindings based on what is selected in the driver station
-		if (RobotState.isTeleop()) {
-			configureTeleOpBindings();
-		} else if (RobotState.isTest()) {
-			configureTestBindings();
-		}
 	}
 
 	private void configureUniversalBindings() {
@@ -167,80 +160,31 @@ public class RobotContainer {
 		);
 	}
 
-	private void configureTeleOpBindings() {
-		arm.setDefaultCommand(arm.rotateToSetpoint());
-
-		defaultButton.onTrue(
-			changeState(
-				ArmSetpoint.Default, 
-				ElevatorSetpoint.Default
-			)
-		);
-
-		intakeButton.onTrue(
-			changeState(
-				ArmSetpoint.Intake, 
-				ElevatorSetpoint.Intake
-			)
-		);
-
-		climbButton.onTrue(
-			changeState(
-				ArmSetpoint.Climb, 
-				ElevatorSetpoint.Climb
-			)
-		);
-
-		a2Button.onTrue(
-			changeState(
-				ArmSetpoint.A2,
-				ElevatorSetpoint.A2
-			)
-		);
-
-		a3Button.onTrue(
-			changeState(
-				ArmSetpoint.A3,
-				ElevatorSetpoint.A3
-			)
-		);
-
-		l2Button.onTrue(
-			changeState(
-				ArmSetpoint.L2,
-				ElevatorSetpoint.L2
-			)
-		);
-
-		l3Button.onTrue(
-			changeState(
-				ArmSetpoint.L3,
-				ElevatorSetpoint.L3
-			)
-		);
-
-		l4Button.onTrue(
-			changeState(
-				ArmSetpoint.L4,
-				ElevatorSetpoint.L4
-			)
-		);
-	}
-
-	private void configureTestBindings() {
+	public void configureTeleOpBindings() {
 		arm.setDefaultCommand(
-			arm.runArm(1)
+			arm.rotateToSetpoint()
 		);
 
 		elevator.setDefaultCommand(
-			elevator.stopElevator()
+			elevator.moveElevatorToSetpoint()
 		);
 
+		defaultButton.onTrue(defaultState());
+		intakeButton.onTrue(intakeState());
+		climbButton.onTrue(climbState());
+		a2Button.onTrue(a2State());
+		a3Button.onTrue(a3State());
+		l2Button.onTrue(l2State());
+		l3Button.onTrue(l3State());
+		l4Button.onTrue(l4State());
+	}
+
+	public void configureTestBindings() {
 		controller.povLeft().whileTrue(arm.rotateCounterClockwise());
 		controller.povRight().whileTrue(arm.rotateClockwise());
 
-		controller.povUp().whileTrue(elevator.moveElevatorUp());
-		controller.povDown().whileTrue(elevator.moveElevatorDown());
+		controller.povUp().whileTrue(elevator.moveElevatorUp()).onFalse(elevator.maintainElevatorHeight());
+		controller.povDown().whileTrue(elevator.moveElevatorDown()).onFalse(elevator.maintainElevatorHeight());
 
 		controller.a().onTrue(elevator.calibrate());
 		controller.b().onTrue(arm.calibrate());
@@ -250,7 +194,71 @@ public class RobotContainer {
 		return Commands.print("No autonomous command configured");
 	}
 
-	public Command changeState(ArmSetpoint armSetpoint, ElevatorSetpoint elevatorSetpoint) {
-		return either(getAutonomousCommand(), getAutonomousCommand(), a2Button);
+	private Command changeState(ArmSetpoint armSetpoint, ElevatorSetpoint elevatorSetpoint) {
+		return either(
+			sequence(
+				arm.setRotationGoal(ArmSetpoint.Default),
+				elevator.setHeightGoal(elevatorSetpoint),
+				arm.setRotationGoal(armSetpoint)
+			), 
+			Commands.print(null),
+			() -> (armSetpoint != arm.armSetpoint && elevatorSetpoint != elevator.elevatorSetpoint)
+		);
+	}
+
+	private Command defaultState() {
+		return changeState(
+			ArmSetpoint.Default,
+			ElevatorSetpoint.Default
+		);
+	}
+
+	private Command intakeState() {
+		return changeState(
+			ArmSetpoint.Intake,
+			ElevatorSetpoint.Intake
+		);
+	}
+
+	private Command climbState() {
+		return changeState(
+			ArmSetpoint.Climb,
+			ElevatorSetpoint.Climb
+		);
+	}
+
+	private Command a2State() {
+		return changeState(
+			ArmSetpoint.A2,
+			ElevatorSetpoint.A2
+		);
+	}
+
+	private Command a3State() {
+		return changeState(
+			ArmSetpoint.A3,
+			ElevatorSetpoint.A3
+		);
+	}
+
+	private Command l2State() {
+		return changeState(
+			ArmSetpoint.L2,
+			ElevatorSetpoint.L2
+		);
+	}
+
+	private Command l3State() {
+		return changeState(
+			ArmSetpoint.L3,
+			ElevatorSetpoint.L3
+		);
+	}
+	
+	private Command l4State() {
+		return changeState(
+			ArmSetpoint.L4,
+			ElevatorSetpoint.L4
+		);
 	}
 }
