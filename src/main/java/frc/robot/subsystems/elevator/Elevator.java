@@ -1,7 +1,5 @@
 package frc.robot.subsystems.elevator;
 
-import java.util.function.IntSupplier;
-
 import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -87,6 +85,10 @@ public class Elevator extends SubsystemBase {
         );
     }
 
+    public boolean atGoal() {
+        return elevatorPID.atGoal();
+    }
+
     public Command moveElevatorUp() {
         return runElevator(0.3);
     }
@@ -118,7 +120,7 @@ public class Elevator extends SubsystemBase {
         );
     }
 
-    public Command moveElevatorToSetpoint() {
+    public Command moveToSetpoint() {
         return run(
             () -> elevatorIO.runElevator(
                 elevatorPID.calculate(elevatorInputs.height)
@@ -144,6 +146,8 @@ public class Elevator extends SubsystemBase {
         SmartDashboard.putNumber("Elevator Motor Amps", elevatorInputs.motorCurrent);
 
         SmartDashboard.putData("Elevator PID Controller", elevatorPID);
+
+        SmartDashboard.putBoolean("Elevator At Goal", atGoal());
 
     }
 

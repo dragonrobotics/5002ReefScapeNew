@@ -39,7 +39,7 @@ public class IntakeIOSim implements IntakeIO {
     }
 
     @Override
-    public void stopIntake() {
+    public void stop() {
         intakeSimMotor.setAppliedOutput(0);
     }
 }

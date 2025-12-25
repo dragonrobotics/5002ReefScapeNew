@@ -22,9 +22,9 @@ public class Intake extends SubsystemBase {
         );
     }
 
-    public Command stopIntake() {
+    public Command stop() {
         return run(
-            () -> intakeIO.stopIntake()
+            () -> intakeIO.stop()
         );
     }
 
@@ -36,19 +36,19 @@ public class Intake extends SubsystemBase {
         return runIntake(-4);
     }
 
-    public Command intakeCoralOnce() {
+    public Command intakeOnce() {
         return sequence(
             runIntake(8),
             waitSeconds(2),
-            stopIntake()
+            stop()
         );
     }
 
-    public Command shootCoralOnce() {
+    public Command shootOnce() {
         return sequence(
             runIntake(-8),
             waitSeconds(2),
-            stopIntake()
+            stop()
         );
     }
 

@@ -5,19 +5,25 @@
 package frc.robot;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
 
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.wpilibj2.command.Commands.either;
+import static edu.wpi.first.wpilibj2.command.Commands.parallel;
 import static edu.wpi.first.wpilibj2.command.Commands.runOnce;
 import static edu.wpi.first.wpilibj2.command.Commands.sequence;
+import static edu.wpi.first.wpilibj2.command.Commands.waitUntil;
 
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -89,6 +95,8 @@ public class RobotContainer {
 	
 	private final Telemetry logger = new Telemetry(maxLinearSpeed);
 
+	private final SendableChooser<Command> autonChooser;
+
 	public RobotContainer() {
 		switch (Robot.CURRENT_DEBUG_STATE) {
 			case REAL:
@@ -124,7 +132,26 @@ public class RobotContainer {
 				intake = new Intake(intakeIOReal);
 		}
 
+		registerAutonCommands();
+
+		autonChooser = AutoBuilder.buildAutoChooser("Middle L4 Intake");
+		SmartDashboard.putData("Auton Chooser", autonChooser);
+
 		configureUniversalBindings();
+	}
+
+	private void registerAutonCommands() {
+		NamedCommands.registerCommand("intake", intake.intakeOnce());
+		NamedCommands.registerCommand("shoot", intake.shootOnce());
+		NamedCommands.registerCommand("l4", l4State());
+		NamedCommands.registerCommand("l3", l3State());
+		NamedCommands.registerCommand("l2", l2State());
+		NamedCommands.registerCommand("defaultState", defaultState());
+		NamedCommands.registerCommand("collectState", intakeState());
+		NamedCommands.registerCommand("climbState", climbState());
+		NamedCommands.registerCommand("runElevator", elevator.moveToSetpoint());
+		NamedCommands.registerCommand("runArm", arm.rotateToSetpoint());
+		NamedCommands.registerCommand("stop", intake.stop());
 	}
 
 	private void configureUniversalBindings() {
@@ -135,6 +162,14 @@ public class RobotContainer {
 				.withVelocityY(controller.getLeftX() * maxLinearSpeed)
 				.withRotationalRate(-controller.getRightX() * maxAngularSpeed)	
 			)
+		);
+
+		arm.setDefaultCommand(
+			arm.rotateToSetpoint()
+		);
+
+		elevator.setDefaultCommand(
+			elevator.moveToSetpoint()
 		);
 
 		swerveDrive.registerTelemetry(logger::telemeterize);
@@ -166,7 +201,7 @@ public class RobotContainer {
 		);
 
 		elevator.setDefaultCommand(
-			elevator.moveElevatorToSetpoint()
+			elevator.moveToSetpoint()
 		);
 
 		defaultButton.onTrue(defaultState());
@@ -191,18 +226,19 @@ public class RobotContainer {
 	}
 
 	public Command getAutonomousCommand() {
-		return Commands.print("No autonomous command configured");
+		return autonChooser.getSelected();
 	}
 
 	private Command changeState(ArmSetpoint armSetpoint, ElevatorSetpoint elevatorSetpoint) {
-		return either(
-			sequence(
-				arm.setRotationGoal(ArmSetpoint.Default),
-				elevator.setHeightGoal(elevatorSetpoint),
-				arm.setRotationGoal(armSetpoint)
-			), 
-			Commands.print(null),
-			() -> (armSetpoint != arm.armSetpoint && elevatorSetpoint != elevator.elevatorSetpoint)
+		return sequence(
+			arm.setRotationGoal(armSetpoint),
+			elevator.setHeightGoal(elevatorSetpoint),
+			parallel(
+				arm.rotateToSetpoint(),
+				elevator.moveToSetpoint()
+			)
+		).until(
+			() -> arm.atGoal() && elevator.atGoal()
 		);
 	}
 

@@ -18,5 +18,5 @@ public interface IntakeIO {
 
     public default void runIntake(double speed) {}
 
-    public default void stopIntake() {}
+    public default void stop() {}
 }

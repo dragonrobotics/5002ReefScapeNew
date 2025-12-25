@@ -27,7 +27,7 @@ public class IntakeIOReal implements IntakeIO {
     }
 
     @Override
-    public void stopIntake() {
+    public void stop() {
         intakeMotor.stopMotor();
     }
 }

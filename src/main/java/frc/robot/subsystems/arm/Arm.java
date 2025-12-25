@@ -80,6 +80,10 @@ public class Arm extends SubsystemBase {
         armIO.stopArm();
     }
 
+    public boolean atGoal() {
+        return armPID.atGoal();
+    }
+
     public Command rotateClockwise() {
         return run(
             () -> runArm(1)
@@ -105,8 +109,6 @@ public class Arm extends SubsystemBase {
 
                 armPID.reset(armInputs.angle, armInputs.velocity);
                 armPID.setGoal(armSetpoint.angle);  
-                
-                armPID.disableContinuousInput();
             }
         );
     }
@@ -130,9 +132,13 @@ public class Arm extends SubsystemBase {
 
         SmartDashboard.putNumber("Arm Absolute Angle", armInputs.absAngle);
 
+        SmartDashboard.putBoolean("Arm At Goal", atGoal());
+
         SmartDashboard.putNumber("Arm Motor Amps", armInputs.motorCurrent);
 
         SmartDashboard.putData("Arm PID Controller", armPID);
+
+
     }
 
     @Override
