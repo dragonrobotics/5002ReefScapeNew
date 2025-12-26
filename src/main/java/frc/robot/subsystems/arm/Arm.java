@@ -67,7 +67,7 @@ public class Arm extends SubsystemBase {
 
         armPID.setTolerance(PID.Arm.tolerance);
 
-        armPID.enableContinuousInput(0, 360);
+        armPID.enableContinuousInput(-360, 360);
 
         setRotationGoal(ArmSetpoint.Default);
     }
@@ -102,15 +102,11 @@ public class Arm extends SubsystemBase {
         );
     }
 
-    public Command setRotationGoal(ArmSetpoint armSetpoint) {
-        return runOnce(
-            () -> {
-                this.armSetpoint = armSetpoint;
+    public void setRotationGoal(ArmSetpoint armSetpoint) {
+        this.armSetpoint = armSetpoint;
 
-                armPID.reset(armInputs.angle, armInputs.velocity);
-                armPID.setGoal(armSetpoint.angle);  
-            }
-        );
+        armPID.reset(armInputs.angle, armInputs.velocity);
+        armPID.setGoal(armSetpoint.angle);  
     }
 
     public Command rotateToSetpoint() {
@@ -149,7 +145,7 @@ public class Arm extends SubsystemBase {
             Units.inchesToMeters(elevatorInputs.height * 2) + 0.1873504,
             new Rotation3d(
                 0,
-                Units.degreesToRadians(90 - 54.133228 + armInputs.angle), 
+                Units.degreesToRadians(90 - 54.133228 - armInputs.angle), 
                 0
             )
         );

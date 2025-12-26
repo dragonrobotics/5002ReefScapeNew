@@ -1,8 +1,5 @@
 package frc.robot.subsystems.intake;
 
-import static edu.wpi.first.wpilibj2.command.Commands.sequence;
-import static edu.wpi.first.wpilibj2.command.Commands.waitSeconds;
-
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -37,19 +34,11 @@ public class Intake extends SubsystemBase {
     }
 
     public Command intakeOnce() {
-        return sequence(
-            runIntake(8),
-            waitSeconds(2),
-            stop()
-        );
+        return runIntake(8).withTimeout(2);
     }
 
     public Command shootOnce() {
-        return sequence(
-            runIntake(-8),
-            waitSeconds(2),
-            stop()
-        );
+        return runIntake(-8).withTimeout(2);
     }
 
     @Override

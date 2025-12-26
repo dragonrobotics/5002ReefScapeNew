@@ -27,6 +27,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import frc.robot.Constants.InitialSimPose;
@@ -218,8 +219,8 @@ public class RobotContainer {
 		controller.povLeft().whileTrue(arm.rotateCounterClockwise());
 		controller.povRight().whileTrue(arm.rotateClockwise());
 
-		controller.povUp().whileTrue(elevator.moveElevatorUp()).onFalse(elevator.maintainElevatorHeight());
-		controller.povDown().whileTrue(elevator.moveElevatorDown()).onFalse(elevator.maintainElevatorHeight());
+		controller.povUp().whileTrue(elevator.moveElevatorUp());
+		controller.povDown().whileTrue(elevator.moveElevatorDown());
 
 		controller.a().onTrue(elevator.calibrate());
 		controller.b().onTrue(arm.calibrate());
@@ -231,14 +232,12 @@ public class RobotContainer {
 
 	private Command changeState(ArmSetpoint armSetpoint, ElevatorSetpoint elevatorSetpoint) {
 		return sequence(
-			arm.setRotationGoal(armSetpoint),
-			elevator.setHeightGoal(elevatorSetpoint),
-			parallel(
-				arm.rotateToSetpoint(),
-				elevator.moveToSetpoint()
-			)
-		).until(
-			() -> arm.atGoal() && elevator.atGoal()
+			runOnce(() -> arm.setRotationGoal(ArmSetpoint.Default)),
+			waitUntil(arm::atGoal),
+			runOnce(() -> elevator.setHeightGoal(elevatorSetpoint)),
+			waitUntil(elevator::atGoal),
+			runOnce(() -> arm.setRotationGoal(armSetpoint)),
+			waitUntil(arm::atGoal)
 		);
 	}
 

@@ -103,20 +103,16 @@ public class Elevator extends SubsystemBase {
         );
     }
 
-    public Command setHeightGoal(ElevatorSetpoint elevatorSetpoint) {
-        return runOnce(
-            () -> {
-                this.elevatorSetpoint = elevatorSetpoint;
+    public void setHeightGoal(ElevatorSetpoint elevatorSetpoint) {
+        this.elevatorSetpoint = elevatorSetpoint;
 
-                elevatorPID.reset(
-                    elevatorInputs.height,
-                    elevatorInputs.velocity
-                );
+        elevatorPID.reset(
+            elevatorInputs.height,
+            elevatorInputs.velocity
+        );
 
-                elevatorPID.setGoal(
-                    elevatorSetpoint.height
-                );
-            }
+        elevatorPID.setGoal(
+            elevatorSetpoint.height
         );
     }
 
