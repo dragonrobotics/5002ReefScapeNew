@@ -6,7 +6,7 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import frc.robot.Constants.CAN_IDs;
 
 public interface IntakeIO {
-    static SparkMax intakeMotor = new SparkMax(CAN_IDs.intakeMotor, MotorType.kBrushless);
+    static final SparkMax intakeMotor = new SparkMax(CAN_IDs.intakeMotor, MotorType.kBrushless);
 
     class IntakeInputs {
         double motorCurrent = 0;
