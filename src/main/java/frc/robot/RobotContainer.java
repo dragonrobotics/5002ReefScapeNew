@@ -161,12 +161,8 @@ public class RobotContainer {
 			)
 		);
 
-		arm.setDefaultCommand(
-			arm.rotateToSetpoint()
-		);
-
-		elevator.setDefaultCommand(
-			elevator.moveToSetpoint()
+		intake.setDefaultCommand(
+			intake.runIntake(0.5)
 		);
 
 		swerveDrive.registerTelemetry(logger::telemeterize);
@@ -233,6 +229,14 @@ public class RobotContainer {
 	}
 
 	public Command getAutonomousCommand() {
+		arm.setDefaultCommand(
+			arm.rotateToSetpoint()
+		);
+
+		elevator.setDefaultCommand(
+			elevator.moveToSetpoint()
+		);
+
 		return autonChooser.getSelected();
 	}
 
