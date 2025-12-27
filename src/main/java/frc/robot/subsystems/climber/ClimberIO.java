@@ -6,7 +6,7 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import frc.robot.Constants.CAN_IDs;
 
 public interface ClimberIO {
-    static SparkMax climberMotor = new SparkMax(CAN_IDs.climberMotor, MotorType.kBrushless);
+    static final SparkMax climberMotor = new SparkMax(CAN_IDs.climberMotor, MotorType.kBrushless);
     
     class ClimberInputs {
         double angle = 0;
