@@ -140,7 +140,7 @@ public class Vision extends SubsystemBase {
                     Pose2d tagPose2d = pose3d.toPose2d();
 
                     Translation2d poseOffset = new Translation2d(
-                        Units.inchesToMeters(18),
+                        Units.inchesToMeters(20),
                         0
                     )
                     .rotateBy(
