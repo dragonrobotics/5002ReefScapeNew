@@ -9,7 +9,7 @@ import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import frc.robot.Constants.EncoderFactors;
 
 public class ElevatorIOReal implements ElevatorIO {
-    private final RelativeEncoder elevatorEncoder = elevatorMotor.getEncoder();
+    private final RelativeEncoder elevatorEncoder = elevatorFollower.getEncoder();
 
     private final SparkMaxConfig elevatorConfig = new SparkMaxConfig();
     private final SparkMaxConfig followerConfig = new SparkMaxConfig();
