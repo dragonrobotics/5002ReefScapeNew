@@ -22,6 +22,7 @@ import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
@@ -74,18 +75,16 @@ public class Vision extends SubsystemBase {
     private final SimCameraProperties simCameraProperties = new SimCameraProperties();
     private final PhotonCameraSim simCamera = new PhotonCameraSim(camera, simCameraProperties);
 
-    public TagSideOffset tagSideOffset;
 
-    public enum TagSideOffset {
-        Left(-2),
-        None(0),
-        Right(2);
-
-        public double yOffset;
-
-        private TagSideOffset(double yOffset) {
-            this.yOffset = yOffset;
-        }
+    /**
+     * Defines the different modes that the robot can use to align itself with an april tag.
+     * 
+     * <p> {@link #FOLLOW}: Aligns the robot to an april tag based on a continuous flow of data from its camera. Use this while testing the robot outside of competitions.
+     * <p> {@link #PATHFIND}: Aligns the robot to an april tag where position/rotation data is predefined by the field layout. Use this during competition for reliability.
+     */
+    public enum AprilTagAlignMode {
+        FOLLOW,
+        PATHFIND
     }
 
     public Vision(CommandSwerveDrivetrain swerveDrive) {
@@ -132,50 +131,85 @@ public class Vision extends SubsystemBase {
         }
     }
 
-    private Optional<Pose2d> getTrackedAprilTagPose() {
+    /**
+     * Converts the raw april tag output of the robot's camera into a usable set of position and rotation attributes.
+     * 
+     * @param aprilTagAlignMode
+     * The way in which you want the robot to align to a specific april tag. Refer to {@link AprilTagAlignMode} for more info.
+     * @return
+     * A Pose2d object that the robot can drive to via. a Holonomic Drive Controller or through PathPlanner's solutions.
+     */
+    public Optional<Pose2d> getTrackedAprilTagPose(AprilTagAlignMode aprilTagAlignMode) {
         return getTrackedAprilTag().flatMap(
-            target -> Constants.AprilTagPoses.tagLayout
-                .getTagPose(target.getFiducialId())
-                .map(pose3d -> {
-                    Pose2d tagPose2d = pose3d.toPose2d();
+            trackedAprilTag -> {
+                switch (aprilTagAlignMode) {
+                    case FOLLOW -> {
+                        final Transform3d cameraToTag = trackedAprilTag.getBestCameraToTarget();
 
-                    Translation2d poseOffset = new Translation2d(
-                        Units.inchesToMeters(20),
-                        0
-                    )
-                    .rotateBy(
-                        tagPose2d.getRotation()
-                    );
+                        final Transform2d robotToCamera = new Transform2d(
+                            cameraPoseOffset.getTranslation().toTranslation2d(),
+                            cameraPoseOffset.getRotation().toRotation2d()
+                        );
 
-                    Translation2d newPoseTranslation = tagPose2d.getTranslation().plus(poseOffset);
+                        final Transform2d cameraToTag2d = new Transform2d(
+                            cameraToTag.getTranslation().toTranslation2d(),
+                            cameraToTag.getRotation().toRotation2d()
+                        );
 
-                    boolean tagIsIntakePose = AprilTagPoses.intakePoseTagIDs.contains(target.getFiducialId());
-                    double rotationalOffset;
+                        final Transform2d tagToGoal = new Transform2d(
+                            new Translation2d(
+                                Units.inchesToMeters(20),
+                                0
+                            ),
+                            Rotation2d.fromDegrees(180)
+                        );
 
-                    if (tagIsIntakePose) {
-                        rotationalOffset = 0;
-                    } else {
-                        rotationalOffset = 180;
+                        return Optional.of(
+                            swerveDrive.getState().Pose
+                                .transformBy(robotToCamera)
+                                .transformBy(cameraToTag2d)
+                                .transformBy(tagToGoal)
+                        );
                     }
+                    
+                    case PATHFIND -> {
+                        final int trackedAprilTagID = trackedAprilTag.getFiducialId();
 
-                    Rotation2d newPoseHeading = tagPose2d.getRotation().plus(
-                        Rotation2d.fromDegrees(rotationalOffset)
-                    );
+                        final Pose2d trackedAprilTagPose = AprilTagPoses.tagLayout.getTagPose(trackedAprilTagID).get().toPose2d();
 
-                    return new Pose2d(
-                        newPoseTranslation,
-                        newPoseHeading
-                    );
+                        final Translation2d loggedPoseTranslation = trackedAprilTagPose.getTranslation().plus(
+                            new Translation2d(
+                                Units.inchesToMeters(20),
+                                0
+                            ).rotateBy(
+                                trackedAprilTagPose.getRotation()
+                            )
+                        );
+
+                        final Rotation2d loggedPoseRotation = trackedAprilTagPose.getRotation().plus(
+                            AprilTagPoses.intakePoseTagIDs.contains(trackedAprilTagID) ?
+                                Rotation2d.fromDegrees(0) :
+                                Rotation2d.fromDegrees(180)   
+                        );
+
+                        return Optional.of(
+                            new Pose2d(
+                                loggedPoseTranslation,
+                                loggedPoseRotation
+                            )
+                        );
+                    }
                 }
-            )
+
+                return Optional.empty();
+            }
         );
     }
 
-
-    public Command driveToTrackedAprilTag() {        
+    public Command driveToTrackedAprilTag(AprilTagAlignMode aprilTagAlignMode) {        
         return Commands.defer(
             () -> {
-                Optional<Pose2d> tagPoseOptional = getTrackedAprilTagPose();
+                Optional<Pose2d> tagPoseOptional = getTrackedAprilTagPose(aprilTagAlignMode);
 
                 if (tagPoseOptional.isEmpty()) {
                     return Commands.none();
@@ -209,8 +243,12 @@ public class Vision extends SubsystemBase {
             }
         }
 
-        getTrackedAprilTagPose().ifPresent(
-            pose -> DogLog.log("Refined Tracked Pose", pose)
+        getTrackedAprilTagPose(AprilTagAlignMode.PATHFIND).ifPresent(
+            pose -> DogLog.log("Target Vision Pathfinding Pose", pose)
+        );
+
+        getTrackedAprilTagPose(AprilTagAlignMode.FOLLOW).ifPresent(
+            pose -> DogLog.log("Target Vision Follow Pose", pose)
         );
     }
 

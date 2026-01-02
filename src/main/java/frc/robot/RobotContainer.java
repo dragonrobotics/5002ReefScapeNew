@@ -30,6 +30,7 @@ import frc.robot.Constants.InitialSimPose;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Telemetry;
 import frc.robot.subsystems.Vision;
+import frc.robot.subsystems.Vision.AprilTagAlignMode;
 import frc.robot.subsystems.arm.Arm;
 import frc.robot.subsystems.arm.ArmIOReal;
 import frc.robot.subsystems.arm.ArmIOSim;
@@ -86,8 +87,8 @@ public class RobotContainer {
 
 	// Robot Drive Mode
 	private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
-		.withDeadband(maxLinearSpeed * 0.1)
-		.withRotationalDeadband(maxAngularSpeed * 0.1)
+		.withDeadband(maxLinearSpeed * Constants.controllerDeadband)
+		.withRotationalDeadband(maxAngularSpeed * Constants.controllerDeadband)
 		.withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 	
 	private final Telemetry logger = new Telemetry(maxLinearSpeed);
@@ -179,7 +180,9 @@ public class RobotContainer {
 			)
 		);
 
-		controller.b().onTrue(vision.driveToTrackedAprilTag());
+		controller.b().onTrue(
+			vision.driveToTrackedAprilTag(AprilTagAlignMode.PATHFIND)
+		);
 	
 		controller.back().onTrue(
 			swerveDrive.runOnce(
@@ -195,6 +198,10 @@ public class RobotContainer {
 
 		elevator.setDefaultCommand(
 			elevator.moveToSetpoint()
+		);
+
+		controller.povUp().whileTrue(
+			vision.driveToTrackedAprilTag(AprilTagAlignMode.FOLLOW)
 		);
 
 		defaultButton.onTrue(defaultState());

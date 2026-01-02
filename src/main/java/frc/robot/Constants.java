@@ -80,7 +80,24 @@ public class Constants {
                     kD = 0.05;
                 }
             }
-        }       
+        }      
+        
+        public static class Holonomic {
+            public static class Linear {
+                public static final double kP = 0.7;
+                public static final double kI = 0;
+                public static final double kD = 0.1;
+            }
+
+            public static class Rotational {
+                public static final double kP = 1;
+                public static final double kI = 0;
+                public static final double kD = 0.1;
+
+                public static final double maxVelocity = 2 * Math.PI;
+                public static final double maxAcceleration = 0.5 * Math.PI;
+            }
+        }
     }
     
     public static class ElevatorFeedForward {
