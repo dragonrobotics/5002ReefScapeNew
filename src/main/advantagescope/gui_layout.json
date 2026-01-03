@@ -1,10 +1,10 @@
 {
   "hubs": [
     {
-      "x": 0,
-      "y": 0,
-      "width": 1280,
-      "height": 1392,
+      "x": -8,
+      "y": -8,
+      "width": 1552,
+      "height": 832,
       "state": {
         "sidebar": {
           "width": 320,
@@ -12,41 +12,42 @@
             "/Pose",
             "/DriveState/ModulePositions",
             "/Pose/robotPose",
-            "/DriveState/Pose",
             "/DriveState/Pose/translation",
             "/DriveState/Pose/rotation",
             "/Arm Pose/rotation",
             "/Arm Pose/rotation/q",
             "/DriveState/ModulePositions/3",
-            "/SmartDashboard/Mode",
             "/SmartDashboard/PID Controller",
             "/SmartDashboard/Profiled PID Controller",
-            "/Arm Pose",
-            "/SmartDashboard/VisionSystemSim-main",
             "/SmartDashboard/VisionSystemSim-main/Sim Field",
             "/SmartDashboard/VisionSystemSim-main/Sim Field/visibleTargetPoses",
             "/SmartDashboard/VisionSystemSim-main/Sim Field/Robot",
             "/SmartDashboard/VisionSystemSim-main/Sim Field/cameras",
-            "/Robot/DogLog",
             "/photonvision/photonvision",
             "/photonvision/photonvision/targetPose",
             "/Robot/Drive",
             "/PathPlanner",
             "/Robot/Drive/SimulationPose",
-            "/SmartDashboard",
             "/photonvision",
             "/Robot",
-            "/DriveState",
             "/Robot/ArmPose3d",
             "/Robot/ArmPose3d/0",
             "/Robot/ArmPose3d/0/rotation",
             "/Robot/ArmPose3d/0/rotation/q",
             "/SmartDashboard/Elevator PID Controller",
-            "/SmartDashboard/Arm PID Controller"
+            "/SmartDashboard/Arm PID Controller",
+            "/Robot/Tag Pose to Follow",
+            "/Robot/Tag Pose to Follow/translation",
+            "/SmartDashboard",
+            "/DriveState/Speeds",
+            "/Robot/test moving april tag pose",
+            "/Robot/test moving april tag pose/rotation",
+            "/Robot/test moving april tag pose/translation",
+            "/Robot/MovingAprilTag"
           ]
         },
         "tabs": {
-          "selected": 3,
+          "selected": 4,
           "tabs": [
             {
               "type": 0,
@@ -147,6 +148,57 @@
               "controlsHeight": 200
             },
             {
+              "type": 2,
+              "title": "Odometry",
+              "controller": {
+                "sources": [
+                  {
+                    "type": "robot",
+                    "logKey": "NT:/Robot/Drive/SimulationPose",
+                    "logType": "Pose2d",
+                    "visible": true,
+                    "options": {}
+                  },
+                  {
+                    "type": "trajectory",
+                    "logKey": "NT:/PathPlanner/activePath",
+                    "logType": "Pose2d[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#00ff00",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "ghost",
+                    "logKey": "NT:/Robot/Target Vision Pathfinding Pose",
+                    "logType": "Pose2d",
+                    "visible": true,
+                    "options": {
+                      "color": "#00ff00"
+                    }
+                  },
+                  {
+                    "type": "ghost",
+                    "logKey": "NT:/Robot/Target Vision Follow Pose",
+                    "logType": "Pose2d",
+                    "visible": true,
+                    "options": {
+                      "color": "#ff8c00"
+                    }
+                  }
+                ],
+                "game": "2025 Field (Welded)",
+                "bumpers": "auto",
+                "origin": "blue",
+                "orientation": 0,
+                "size": 30
+              },
+              "controllerUUID": "av31or1gjhe4y7z1y088n14sj58x3wfg",
+              "renderer": null,
+              "controlsHeight": 200
+            },
+            {
               "type": 3,
               "title": "3D Field",
               "controller": {
@@ -189,44 +241,6 @@
                     "options": {}
                   },
                   {
-                    "type": "ghost",
-                    "logKey": "NT:/Robot/Refined Tracked Pose",
-                    "logType": "Pose2d",
-                    "visible": true,
-                    "options": {
-                      "model": "5002_reefscape",
-                      "color": "#00ff00"
-                    }
-                  },
-                  {
-                    "type": "component",
-                    "logKey": "NT:Arm Pose",
-                    "logType": "Pose3d",
-                    "visible": true,
-                    "options": {}
-                  },
-                  {
-                    "type": "component",
-                    "logKey": "NT:Climber Pose",
-                    "logType": "Pose3d",
-                    "visible": true,
-                    "options": {}
-                  },
-                  {
-                    "type": "component",
-                    "logKey": "NT:Elevator Second Stage Pose",
-                    "logType": "Pose3d",
-                    "visible": true,
-                    "options": {}
-                  },
-                  {
-                    "type": "component",
-                    "logKey": "NT:Elevator First Stage Pose",
-                    "logType": "Pose3d",
-                    "visible": true,
-                    "options": {}
-                  },
-                  {
                     "type": "trajectory",
                     "logKey": "NT:/PathPlanner/activePath",
                     "logType": "Pose2d[]",
@@ -235,6 +249,26 @@
                       "color": "#00ff00",
                       "size": "normal"
                     }
+                  },
+                  {
+                    "type": "ghost",
+                    "logKey": "NT:/Robot/Target Vision Pathfinding Pose",
+                    "logType": "Pose2d",
+                    "visible": true,
+                    "options": {
+                      "model": "5002_reefscape",
+                      "color": "#00ff00"
+                    }
+                  },
+                  {
+                    "type": "ghost",
+                    "logKey": "NT:/Robot/Target Vision Follow Pose",
+                    "logType": "Pose2d",
+                    "visible": true,
+                    "options": {
+                      "model": "5002_reefscape",
+                      "color": "#ff8c00"
+                    }
                   }
                 ],
                 "game": "2025 Field (Welded)",
@@ -242,20 +276,20 @@
               },
               "controllerUUID": "3rjmp1edlugzm9adpry5q2leva9gb321",
               "renderer": {
-                "cameraIndex": -2,
+                "cameraIndex": -1,
                 "orbitFov": 60,
                 "cameraPosition": [
-                  0.08571132673307519,
-                  1.7646962249668756,
-                  6.264611990588655
+                  5.0702037365511545,
+                  5.717682406844877,
+                  4.992394483594397
                 ],
                 "cameraTarget": [
-                  0,
-                  0.5,
-                  0
+                  6.092640889841017,
+                  -5.293095652486772,
+                  -3.845915818163434
                 ]
               },
-              "controlsHeight": 200
+              "controlsHeight": 252
             },
             {
               "type": 2,
