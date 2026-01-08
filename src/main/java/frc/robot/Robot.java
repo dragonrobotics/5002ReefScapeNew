@@ -6,9 +6,21 @@ package frc.robot;
 
 import java.security.KeyStore.PrivateKeyEntry;
 
+import org.ironmaple.simulation.SimulatedArena;
+import org.ironmaple.simulation.seasonspecific.crescendo2024.CrescendoNoteOnField;
+import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeAlgaeOnField;
+import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnField;
+import org.littletonrobotics.junction.LoggedRobot;
+import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.NT4Publisher;
+
 //import edu.wpi.first.epilogue.Epilogue;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.net.PortForwarder;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -24,7 +36,7 @@ import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.vision;
 @Logged
-public class Robot extends TimedRobot {
+public class Robot extends LoggedRobot{
 private Command m_autonomousCommand;
 NetworkTable table;
 
@@ -41,13 +53,14 @@ public Robot() {
 public void robotInit(){
   PortForwarder.add(5800,"photonvision", 5800);
   table = NetworkTableInstance.getDefault().getTable("VirtualButtonBoard");
+   Logger.addDataReceiver(new NT4Publisher()); // sends to AdvantageScope via NT4
+   Logger.start();
 }
 
 @Override
 public void robotPeriodic() {
   boolean intakeval = table.getEntry("button1").getBoolean(false);
-
-    SmartDashboard.putBoolean("VALUE", intakeval);
+   SmartDashboard.putBoolean("VALUE", intakeval);
   CommandScheduler.getInstance().run(); 
 }
 
@@ -106,5 +119,31 @@ public void testPeriodic() {}
 public void testExit() {}
 
 @Override
-public void simulationPeriodic() {}
+public void simulationInit() {
+  SimulatedArena arena = SimulatedArena.getInstance();
+
+  arena.addGamePiece(
+      new ReefscapeCoralOnField(
+          new Pose2d(2, 2, Rotation2d.fromDegrees(90))));
+
+  arena.addGamePiece(
+      new ReefscapeAlgaeOnField(
+          new Translation2d(2, 2)));
+}
+
+@Override
+public void simulationPeriodic() {
+    SmartDashboard.putBoolean("RobotPeriodicAlive", true);
+    SimulatedArena arena = SimulatedArena.getInstance();
+    arena.simulationPeriodic();
+  
+    Logger.recordOutput(
+        "FieldSimulation/Algae",
+        arena.getGamePiecesArrayByType("Algae"));
+  
+    Logger.recordOutput(
+        "FieldSimulation/Coral",
+        arena.getGamePiecesArrayByType("Coral"));
+}
+
 }

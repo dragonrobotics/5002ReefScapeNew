@@ -7,6 +7,7 @@ package frc.robot;
 import static edu.wpi.first.units.Units.*;
 
 import org.json.simple.JSONObject;
+import org.littletonrobotics.junction.Logger;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
 import java.lang.ModuleLayer.Controller;
@@ -132,13 +133,9 @@ public class RobotContainer {
 
     public RobotContainer() {
       isRightPose = true;
-      // NetworkTable table = NetworkTableInstance.getDefault().getTable("VirtualButtonBoard");
-      // boolean intakeval = table.getEntry("intake").getBoolean(false);
-
-      // SmartDashboard.putBoolean("VALUE", intakeval);
 
       SmartDashboard.putData("Scheduler", CommandScheduler.getInstance());
-      //DataLogManager.start();      
+      DataLogManager.start();      
 
       mode.setDefaultOption("Competition", false);
       mode.addOption("Calibrate", true);
@@ -205,16 +202,6 @@ public class RobotContainer {
       if(mode.getSelected() == null){
         System.out.println("NO MODE");
       }
-      // Note that X is defined as forward according to WPILib convention,
-      // and Y is defined as to the left according to WPILib convention.
-      // drivetrain.setDefaultCommand(
-      //     // Drivetrain will execute this command periodically
-      //     drivetrain.applyRequest(() ->
-      //         drive.withVelocityX(aviator.getY() * MaxSpeed/8.0) // Drive forward with negative Y (forward)
-      //             .withVelocityY(aviator.getX() * MaxSpeed/8.0) // Drive left with negative X (left)
-      //             .withRotationalRate(-aviator.getZ() * MaxAngularRate*0.15) // Drive counterclockwise with negative X (left)
-      //     )
-      // );
 
       drivetrain.setDefaultCommand(
         // Drivetrain will execute this command periodically
@@ -238,65 +225,12 @@ public class RobotContainer {
                drive.withVelocityX(-joystick.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
                    .withVelocityY(-joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
                    .withRotationalRate(-joystick.getRightX() * MaxAngularRate)))); // Drive counterclockwise with negative X (left));
-      
-      //Auto Allign auwto April Tag
-      // joystick.leftBumper().onTrue(runOnce(()->{Command pathCommand = path.pathTo(Paths.transformOffset(path.closestTagS(poseList, "left"), 40, 0.0, 180.0));;
-      //                                           currentCommand = pathCommand; 
-      //                                           pathCommand.schedule();}));
-
-      // joystick.rightBumper().onTrue(runOnce(()->{Command pathCommand = path.pathTO(Vision.getPoseTracked());;
-      // currentCommand = pathCommand; 
-      // pathCommand.schedule();}));
-
-      // joystick.rightBumper().whileTrue(run(()->{
-      //       Pose2d poser = Vision.fixResult(6.0);
-      //       Command align = Vision.alignToPose(poser,6);
-      //       if (align != null){
-      //         currentCommand = align;
-      //         currentCommand.schedule();
-      //       };
-    
-      // }).finallyDo(()->
-      // drivetrain.applyRequest(() ->
-      //         drive.withVelocityX(-oystick.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
-      //             .withVelocityY(-joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
-      //             .withRotationalRate(-joystick.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
-      //     )));
-
-
-    
-
-      // joystick.b().onTrue(runOnce(()->{Command pathCommand = Paths.pathTo(Paths.transformOffset(path.closestTag(intakePoseList), 36,10, 180.0));
-      //                                           currentCommand = sequence(pathCommand);
-      //                                           pathCommand.schedule();}));
-  
-
-      
-                                                
-      // joystick.a().onTrue(runOnce(()->{currentCommand.cancel();}));  
 
       //Use Shooter
       joystick.rightTrigger().whileTrue(shoot());
       fireButton.whileTrue(shoot());
       joystick.leftBumper().whileTrue(alignCommand);
       joystick.leftTrigger().whileTrue(intake());
-      // joystick.square().whileTrue(climb());
-      // joystick.circle().whileTrue(Unclimb());
-
-      // joystick.povUp().whileTrue(run(()->{
-  //       Command align = Vision.mover(0.25);
-  //         currentCommand = align;
-  //         currentCommand.schedule();
-
-  // }).finallyDo(()->
-  // drivetrain.applyRequest(() ->
-  //         drive.withVelocityX(-joystick.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
-  //             .withVelocityY(-joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
-  //             .withRotationalRate(-joystick.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
-  //     )));
-
-
-
 
       //CALIBRATION MODE BINDS
       if(mode.getSelected() == true){
@@ -468,22 +402,6 @@ public class RobotContainer {
   public Command algeaBot(){
     return changeState(4.5, -45);
   }
-
-  // public Command Align(boolean left){
-  //   return run(()->{
-  //     align.moveToState(left);}).
-  //           until(()->((drivetrain.getState().Pose.getX() >= align.returnGoalPose2d(left).getX() -0.05 && drivetrain.getState().Pose.getX() <= align.returnGoalPose2d(left).getX() + 0.05) &&
-  //                     (drivetrain.getState().Pose.getY() >= align.returnGoalPose2d(left).getY() - 0.05 && drivetrain.getState().Pose.getY() <= align.returnGoalPose2d(left).getY() + 0.05))).
-  //           finallyDo(()->{
-  //             drive
-  //             .withVelocityX(-joystick.getLeftY() * MaxSpeed)
-  //             .withVelocityY(-joystick.getLeftX() * MaxSpeed)
-  //             .withRotationalRate(-joystick.getRightX() * MaxAngularRate);
-  //           });
-  // }
-
-
-
   
   public Command getAutonomousCommand() {
     return autoChooser.getSelected();

@@ -64,7 +64,7 @@ public class AutoAlignToTagCommand extends Command {
     
         xController.reset();
         yController.reset();
-        thetaController.reset(0.0);
+        // thetaController.reset(0.0);
     }
 
     @Override
