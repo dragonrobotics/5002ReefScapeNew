@@ -24,8 +24,8 @@ public class AutoAlignToTagCommand extends Command {
     private AlignState state = AlignState.ACQUIRE;
 
     // Controllers (FIELD-RELATIVE)
-    private final PIDController xController = new PIDController(3.0, 0.0, 0.2);
-    private final PIDController yController = new PIDController(3.0, 0.0, 0.2);
+    private final PIDController xController = new PIDController(2.2, 0.0, 0.35);
+    private final PIDController yController = new PIDController(2.2, 0.0, 0.35);
 
     private final ProfiledPIDController thetaController =
         new ProfiledPIDController(
@@ -64,7 +64,9 @@ public class AutoAlignToTagCommand extends Command {
     
         xController.reset();
         yController.reset();
-        // thetaController.reset(0.0);
+        thetaController.reset(
+    drivetrain.getState().Pose.getRotation().getRadians()
+);
     }
 
     @Override
@@ -112,8 +114,8 @@ public class AutoAlignToTagCommand extends Command {
 
         drivetrain.setControl(
             drivetrain.getAutoAlignRequest()
-                .withVelocityX(vx)
-                .withVelocityY(vy)
+                .withVelocityX(-vx)
+                .withVelocityY(-vy)
                 .withRotationalRate(omega)
         );
     }
